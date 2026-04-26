@@ -1,0 +1,271 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ═══════════════════════════════════════════════════════════════════
+   CDC Design System — CSS Variables
+   Light mode = :root   |   Dark mode = .dark
+   All color values are "H S% L%" (no hsl() wrapper) so Tailwind can
+   inject the / <alpha-value> modifier for opacity utilities.
+═══════════════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    /* Layout */
+    --radius: 0.5rem;
+    --sidebar-width: 256px;
+    --sidebar-collapsed: 64px;
+    --topbar-height: 60px;
+
+    /* ── LIGHT MODE ──────────────────────────────────────────── */
+
+    /* Canvas — page background (cool architectural gray) */
+    --canvas:         220 14% 96%;   /* #f2f4f7 */
+
+    /* Surfaces */
+    --surface:        0 0% 100%;     /* #ffffff */
+    --surface-card:   0 0% 100%;     /* #ffffff */
+    --surface-hover:  220 12% 94%;   /* #eef0f4 */
+    --surface-border: 220 10% 89%;   /* #e1e5ed */
+    --surface-active: 220 10% 86%;   /* #d9deea */
+
+    /* Text */
+    --text-primary:   222 18%  9%;   /* #0f1219 */
+    --text-secondary: 218 13% 36%;   /* #4c576a */
+    --text-muted:     214  9% 62%;   /* #92a0ae */
+    --text-inverted:  0 0% 100%;     /* white — for use on dark/gold bg */
+
+    /* ── CDC Brand Accent = GOLD ─────────────────────────────── */
+    /* Darker in light mode to ensure contrast on white surfaces  */
+    --brand:     38 88% 34%;   /* #a27210 */
+    --brand-50:  42 90% 97%;   /* #fdf8ec */
+    --brand-100: 42 85% 91%;   /* #f8edca */
+    --brand-200: 42 80% 80%;   /* #f0d28a */
+    --brand-300: 42 76% 64%;   /* #ddb348 */
+    --brand-400: 40 82% 50%;   /* #c88e12 */
+    --brand-500: 38 88% 34%;   /* #a27210 — DEFAULT */
+    --brand-600: 36 86% 26%;   /* #7e5408 */
+    --brand-700: 34 82% 20%;   /* #623f06 */
+    --brand-800: 32 78% 14%;   /* #462b04 */
+    --brand-900: 30 72%  9%;   /* #2c1902 */
+
+    /* ── Shell — ALWAYS DARK (sidebar stays dark in both modes) ─ */
+    --shell-bg:        220 13% 13%;  /* #1d2230 */
+    --shell-hover:     220 12% 18%;  /* #272e3d */
+    --shell-border:    220 11% 21%;  /* #2e3647 */
+    --shell-text:      213 14% 72%;  /* #a8b5c6 */
+    --shell-muted:     213 10% 48%;  /* #69788a */
+    --shell-active-bg: 38  55% 15%;  /* #302512 — warm gold tint */
+    --shell-active-fg: 42  76% 62%;  /* #ddb845 — bright gold */
+
+    /* ── Topbar — white in light mode ──────────────────────────── */
+    --topbar-bg:     0 0% 100%;      /* white */
+    --topbar-border: 220 10% 89%;    /* matches surface-border */
+  }
+
+  /* ── DARK MODE ─────────────────────────────────────────────────── */
+  .dark {
+    /* Canvas — deep charcoal (NOT navy) */
+    --canvas:         222 10%  9%;   /* #141618 */
+
+    /* Surfaces */
+    --surface:        222  9% 11%;   /* #191c20 */
+    --surface-card:   222  8% 13%;   /* #1d2026 */
+    --surface-hover:  222  8% 17%;   /* #252930 */
+    --surface-border: 222  8% 22%;   /* #31363f */
+    --surface-active: 222  8% 27%;   /* #3d424d */
+
+    /* Text */
+    --text-primary:   210 20% 95%;   /* #eef2f8 */
+    --text-secondary: 210 12% 64%;   /* #96a4b4 */
+    --text-muted:     210 10% 42%;   /* #5e6a78 */
+    --text-inverted:  222 18%  9%;   /* dark — for use on gold bg */
+
+    /* ── CDC Brand = GOLD (brighter in dark mode) ─────────────── */
+    --brand:     42 80% 48%;   /* #c49a14 */
+    --brand-50:  38 65% 10%;   /* #2c1e07 */
+    --brand-100: 39 68% 15%;   /* #42300b */
+    --brand-200: 40 72% 24%;   /* #6a4d10 */
+    --brand-300: 41 76% 38%;   /* #a87b16 */
+    --brand-400: 42 78% 46%;   /* #c09218 */
+    --brand-500: 42 80% 48%;   /* #c49a14 — DEFAULT */
+    --brand-600: 40 76% 40%;   /* #a27e14 */
+    --brand-700: 38 72% 30%;   /* #7a6010 */
+    --brand-800: 36 68% 20%;   /* #51400a */
+    --brand-900: 34 62% 12%;   /* #302706 */
+
+    /* ── Shell — deepest charcoal in dark mode ──────────────────── */
+    --shell-bg:        222 12%  8%;  /* #111318 */
+    --shell-hover:     222 11% 13%;  /* #1c1f26 */
+    --shell-border:    222 10% 17%;  /* #252931 */
+    --shell-text:      213 13% 68%;  /* #9ea8ba */
+    --shell-muted:     213  9% 45%;  /* #636e7d */
+    --shell-active-bg: 40  50% 11%;  /* #281f0c */
+    --shell-active-fg: 43  78% 62%;  /* #e0b840 */
+
+    /* ── Topbar — dark in dark mode ─────────────────────────────── */
+    --topbar-bg:     222  8% 13%;    /* matches surface-card */
+    --topbar-border: 222  8% 22%;    /* matches surface-border */
+  }
+
+  /* ── Base element defaults ──────────────────────────────────────── */
+  * {
+    box-sizing: border-box;
+    border-color: hsl(var(--surface-border));
+  }
+
+  html {
+    background-color: hsl(var(--canvas));
+    color: hsl(var(--text-primary));
+    font-family: 'Inter', 'Tajawal', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  html[dir='rtl'] {
+    font-family: 'Tajawal', 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    background-color: hsl(var(--canvas));
+    color: hsl(var(--text-primary));
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar        { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track  { background: transparent; }
+  ::-webkit-scrollbar-thumb  {
+    background: hsl(var(--surface-border));
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--surface-active)); }
+
+  /* Focus ring — gold */
+  :focus-visible {
+    outline: 2px solid hsl(var(--brand));
+    outline-offset: 2px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   COMPONENT CLASSES
+═══════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* ── Page headings ──────────────────────────────────────────────── */
+  .page-title {
+    @apply text-xl font-bold text-text-primary tracking-tight;
+  }
+  .section-title {
+    @apply text-[11px] font-semibold text-text-muted uppercase tracking-[0.12em];
+  }
+
+  /* ── Card primitives ────────────────────────────────────────────── */
+  .card {
+    @apply bg-surface-card rounded-xl border border-surface-border shadow-card;
+  }
+  .card-hover {
+    @apply card transition-all duration-200 hover:border-brand/25 hover:shadow-card-md;
+  }
+  .stat-card {
+    @apply card p-5 flex flex-col gap-2;
+  }
+
+  /* ── Field label ────────────────────────────────────────────────── */
+  .field-label {
+    @apply text-xs font-medium text-text-muted mb-1.5 block;
+  }
+
+  /* ── Logo treatments ────────────────────────────────────────────── */
+  .logo-dark  { filter: brightness(0) invert(1); opacity: 0.90; }
+  .logo-light { filter: none; }
+
+  /* ── Data table ─────────────────────────────────────────────────── */
+  .data-table { @apply w-full text-sm; }
+  .data-table thead {
+    @apply border-b border-surface-border;
+  }
+  .data-table thead th {
+    @apply px-4 py-3 text-start text-[11px] font-semibold text-text-muted uppercase
+           tracking-wider bg-surface-hover;
+  }
+  .data-table tbody tr {
+    @apply border-b border-surface-border last:border-0 hover:bg-surface-hover
+           transition-colors cursor-default;
+  }
+  .data-table tbody td { @apply px-4 py-3.5; }
+
+  /* ── Divider ────────────────────────────────────────────────────── */
+  .divider { @apply border-t border-surface-border; }
+
+  /* ── Empty state ────────────────────────────────────────────────── */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+  }
+  .empty-state-icon {
+    @apply w-14 h-14 rounded-2xl bg-surface-hover flex items-center justify-center mb-4;
+  }
+  .empty-state p { @apply text-sm text-text-muted max-w-xs; }
+
+  /* ── Inline code badge ──────────────────────────────────────────── */
+  .code-badge {
+    @apply font-mono text-xs text-brand-400 bg-brand/8 px-1.5 py-0.5 rounded;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+═══════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+
+  /* ── Shell nav items ────────────────────────────────────────────── */
+  .nav-item {
+    @apply relative flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium
+           transition-all duration-150;
+  }
+  /* Active: warm gold tint background + gold left accent stripe */
+  .nav-item-active {
+    background-color: hsl(var(--shell-active-bg));
+    color: hsl(var(--shell-active-fg));
+  }
+  .nav-item-active::before {
+    content: '';
+    @apply absolute inset-y-1.5 start-0 w-0.5 rounded-full;
+    background-color: hsl(var(--shell-active-fg));
+  }
+  /* Inactive */
+  .nav-item-inactive { color: hsl(var(--shell-text)); }
+  .nav-item-inactive:hover {
+    background-color: hsl(var(--shell-hover));
+    color: hsl(var(--shell-active-fg) / 0.85);
+  }
+
+  /* ── Form controls ──────────────────────────────────────────────── */
+  .field-input {
+    @apply flex h-9 w-full rounded-lg border border-surface-border bg-surface-card
+           px-3 text-sm text-text-primary placeholder:text-text-muted transition-colors duration-150;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50
+           focus-visible:border-brand/50;
+    @apply disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .field-select {
+    @apply flex h-9 w-full rounded-lg border border-surface-border bg-surface-card
+           px-3 text-sm text-text-primary transition-colors duration-150;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50
+           focus-visible:border-brand/50;
+    @apply disabled:cursor-not-allowed disabled:opacity-40;
+  }
+  .field-textarea {
+    @apply flex w-full rounded-lg border border-surface-border bg-surface-card
+           px-3 py-2 text-sm text-text-primary placeholder:text-text-muted
+           resize-none transition-colors duration-150;
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/50
+           focus-visible:border-brand/50;
+  }
+
+  /* ── Page header row ────────────────────────────────────────────── */
+  .page-header          { @apply flex items-center justify-between gap-4 mb-6; }
+  .page-header-title    { @apply text-xl font-bold text-text-primary tracking-tight; }
+  .page-header-subtitle { @apply text-sm text-text-muted mt-0.5; }
+}

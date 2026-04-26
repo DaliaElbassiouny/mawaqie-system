@@ -1,0 +1,701 @@
+generator client {
+  provider = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTH & RBAC
+// ─────────────────────────────────────────────────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  password     String
+  nameAr       String
+  nameEn       String?
+  phone        String?
+  isActive     Boolean  @default(true)
+  refreshToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userRoles UserRole[]
+  auditLogs AuditLog[]
+  responsibleOperationActivities OperationActivity[] @relation("OperationResponsibleUser")
+  approvedActivities             OperationActivity[] @relation("ActivityApprover")
+  createdDailyLogs               DailyLog[]          @relation("DailyLogCreator")
+  requestedPurchaseRequests      PurchaseRequest[]   @relation("PurchaseRequestRequester")
+  approvedPurchaseRequests       PurchaseRequest[]   @relation("PurchaseRequestApprover")
+  createdOperationSchedules      OperationSchedule[] @relation("OperationScheduleCreator")
+  createdInvoices                Invoice[]           @relation("InvoiceCreator")
+  createdExtracts                Extract[]           @relation("ExtractCreator")
+  uploadedDocuments              Document[]          @relation("DocumentUploader")
+  notifications                  Notification[]      @relation("UserNotifications")
+
+  @@map("users")
+}
+
+model Role {
+  id       String  @id @default(cuid())
+  nameAr   String
+  nameEn   String
+  code     String  @unique
+  isSystem Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id     String @id @default(cuid())
+  code   String @unique
+  nameAr String
+  nameEn String
+  module String
+  action String
+
+  createdAt DateTime @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@map("permissions")
+}
+
+// User ↔ Role mapping — null projectId means system-wide assignment
+model UserRole {
+  id        String  @id @default(cuid())
+  userId    String
+  roleId    String
+  projectId String? // project-scoped override
+
+  createdAt DateTime @default(now())
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role    Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId, projectId])
+  @@map("user_roles")
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLIENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Client {
+  id       String  @id @default(cuid())
+  nameAr   String
+  nameEn   String?
+  code     String  @unique
+  phone    String?
+  email    String?
+  address  String?
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tenders Tender[]
+
+  @@map("clients")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TENDERS / PRICING REGISTER
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Tender {
+  id               String       @id @default(cuid())
+  code             String       @unique
+  nameAr           String
+  nameEn           String?
+  clientId         String
+  status           TenderStatus @default(PRICING_IN_PROGRESS)
+
+  // Classification
+  location         String?
+  projectType      String?
+  leadSource       String?
+
+  // Financial
+  currency         String   @default("SAR")
+  estimatedValue   Decimal? @db.Decimal(18, 4)
+  submittedValue   Decimal? @db.Decimal(18, 4)
+
+  // Key dates
+  bidReceiptDate   DateTime?
+  dueDate          DateTime?
+  submittedAt      DateTime?
+  awardedAt        DateTime?
+
+  // Results / team
+  bidResult        String?
+  assignedEngineer String?
+  notes            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  client   Client    @relation(fields: [clientId], references: [id])
+  projects Project[]
+
+  @@index([status])
+  @@index([clientId])
+  @@index([dueDate])
+  @@map("tenders")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROJECTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Project {
+  id            String        @id @default(cuid())
+  code          String        @unique
+  nameAr        String
+  nameEn        String?
+  tenderId      String?
+  sourceType    ProjectSourceType @default(DIRECT)
+  companyCode   String? // legal entity / company code
+  location      String?
+  projectType   String?
+  currency      String        @default("SAR")
+  status        ProjectStatus @default(PLANNING)
+  startDate     DateTime?
+  endDate       DateTime?
+  contractValue Decimal?      @db.Decimal(18, 4)
+  notes         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tender               Tender?               @relation(fields: [tenderId], references: [id])
+  userRoles            UserRole[]
+  costItems            CostItem[]
+  invoices             Invoice[]
+  extracts             Extract[]
+  purchaseRequests     PurchaseRequest[]
+  operationSchedules   OperationSchedule[]
+  operationActivities  OperationActivity[]
+  dailyLogs            DailyLog[]
+
+  @@index([status])
+  @@index([tenderId])
+  @@map("projects")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COST ITEMS (foundation — business logic in later phases)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model CostItem {
+  id        String  @id @default(cuid())
+  projectId String
+  code      String
+  nameAr    String
+  nameEn    String?
+  category  String
+  unit      String?
+  quantity  Decimal? @db.Decimal(18, 4)
+  unitCost  Decimal? @db.Decimal(18, 4)
+  totalCost Decimal? @db.Decimal(18, 4)
+  currency  String   @default("SAR")
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  invoices Invoice[]
+
+  @@unique([projectId, code])
+  @@map("cost_items")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PURCHASE REQUESTS (foundation — business logic in later phases)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model PurchaseRequest {
+  id              String            @id @default(cuid())
+  prNumber        String            @unique
+  projectId       String
+  activityId      String?
+  nameAr          String
+  nameEn          String?
+  description     String?
+  requirementType String            @default("OTHER")  // MATERIALS | EQUIPMENT | SERVICES | OTHER
+  priority        LookaheadPriority @default(MEDIUM)
+  status          PRStatus          @default(DRAFT)
+  currency        String            @default("SAR")
+  quantity        Decimal?          @db.Decimal(18, 4)
+  unit            String?
+  totalAmount     Decimal?          @db.Decimal(18, 4)
+  vendor          String?
+  expectedDeliveryDate DateTime?
+  actualDeliveryDate   DateTime?
+  requestedById   String?
+  approvedById    String?
+  approvedAt      DateTime?
+  approvalNote    String?
+  notes           String?
+
+  requestedAt DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project    Project            @relation(fields: [projectId], references: [id])
+  activity   OperationActivity? @relation("ActivityPurchaseRequests", fields: [activityId], references: [id], onDelete: SetNull)
+  requester  User?              @relation("PurchaseRequestRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedBy User?              @relation("PurchaseRequestApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([requestedById])
+  @@index([status])
+  @@index([priority])
+  @@map("purchase_requests")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUDIT LOGS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model AuditLog {
+  id         String  @id @default(cuid())
+  userId     String?
+  action     String // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  module     String
+  entityType String?
+  entityId   String?
+  oldData    Json?
+  newData    Json?
+  ip         String?
+  userAgent  String?
+
+  createdAt DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([module])
+  @@index([entityType, entityId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SETTINGS (key-value store for system configuration)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Setting {
+  key       String @id
+  value     String
+  type      String @default("string") // string | number | boolean | json
+  module    String @default("system")
+  labelAr   String?
+  labelEn   String?
+
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OPERATIONS (Phase 2B-1: execution tracking)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model OperationSchedule {
+  id          String  @id @default(cuid())
+  projectId   String
+  year        Int
+  month       Int     // 1-12
+  title       String?
+  notes       String?
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project    Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator    User?               @relation("OperationScheduleCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  activities OperationActivity[]
+
+  @@unique([projectId, year, month])
+  @@index([projectId])
+  @@index([createdById])
+  @@map("operation_schedules")
+}
+
+model OperationActivity {
+  id                String         @id @default(cuid())
+  scheduleId        String?                             // null = standalone (not bound to a monthly schedule)
+  projectId         String
+  code              String                              // auto-generated: ACT-001, ACT-002 …
+  nameAr            String
+  nameEn            String?
+  category          String         @default("OTHER")
+  location          String?
+  status            ActivityStatus @default(NOT_STARTED)
+  lookaheadStatus   LookaheadStatus @default(PLANNED)
+  priority          LookaheadPriority @default(MEDIUM)
+  readyForExecution Boolean        @default(false)
+  missingRequirements String?
+  plannedStart      DateTime?
+  plannedEnd        DateTime?
+  actualStart       DateTime?
+  actualEnd         DateTime?
+  progressPercent   Int            @default(0)
+  responsibleUserId String?
+  notes             String?
+  blockerReason     String?
+  delayDays         Int            @default(0)          // auto-calculated: actualEnd > plannedEnd
+
+  // v1 lightweight resource requirements; v2 = structured resource tables
+  requiredLabor     String?
+  laborRequirementStatus RequirementReadinessStatus?
+  laborRequirementNotes  String?
+  requiredMaterials String?
+  materialsRequirementStatus RequirementReadinessStatus?
+  materialsRequirementNotes  String?
+  requiredEquipment String?
+  equipmentRequirementStatus RequirementReadinessStatus?
+  equipmentRequirementNotes  String?
+
+  // cost awareness (no cost-control linkage yet)
+  expectedCost      Decimal?       @db.Decimal(18, 4)
+  actualCost        Decimal?       @db.Decimal(18, 4)
+
+  // approval workflow
+  requiresApproval  Boolean        @default(false)
+  approvalStatus    ApprovalStatus @default(NOT_REQUIRED)
+  approvedById      String?
+  approvedAt        DateTime?
+  approvalNote      String?
+
+  createdById String?
+  updatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  schedule         OperationSchedule? @relation(fields: [scheduleId], references: [id], onDelete: SetNull)
+  project          Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  responsibleUser  User?              @relation("OperationResponsibleUser", fields: [responsibleUserId], references: [id], onDelete: SetNull)
+  approvedBy       User?              @relation("ActivityApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  dailyLogLinks    DailyLogActivity[]
+  purchaseRequests PurchaseRequest[]  @relation("ActivityPurchaseRequests")
+
+  @@unique([projectId, code])
+  @@index([scheduleId])
+  @@index([projectId])
+  @@index([status])
+  @@index([lookaheadStatus])
+  @@index([priority])
+  @@index([approvalStatus])
+  @@index([plannedStart])
+  @@index([laborRequirementStatus])
+  @@index([materialsRequirementStatus])
+  @@index([equipmentRequirementStatus])
+  @@map("operation_activities")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DAILY LOGS (Phase 2B-1: per-day execution records)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model DailyLog {
+  id                     String             @id @default(cuid())
+  projectId              String
+  date                   DateTime           @db.Date
+  summary                String?
+  completedWork          String?
+  workedActivitiesSummary String?
+  blockers               String?
+  notes                  String?
+  tomorrowPlan           String?
+  createdById            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project           Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  creator           User?              @relation("DailyLogCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  relatedActivities DailyLogActivity[]
+
+  @@unique([projectId, date])
+  @@index([projectId])
+  @@index([date])
+  @@map("daily_logs")
+}
+
+model DailyLogActivity {
+  dailyLogId String
+  activityId String
+
+  dailyLog  DailyLog          @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+  activity  OperationActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+
+  @@id([dailyLogId, activityId])
+  @@index([activityId])
+  @@map("daily_log_activities")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// IMPORT LOGS (future workbook import infrastructure — scaffold only)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model ImportLog {
+  id         String       @id @default(cuid())
+  module     String
+  fileName   String
+  status     ImportStatus @default(PENDING)
+  totalRows  Int          @default(0)
+  imported   Int          @default(0)
+  failed     Int          @default(0)
+  errors     Json?
+  uploadedBy String // userId
+  dryRun     Boolean      @default(false)
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  @@map("import_logs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum TenderStatus {
+  PRICING_IN_PROGRESS
+  PRICED_SUBMITTED
+  CONTRACTED
+  LOST
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum ProjectSourceType {
+  TENDER
+  DIRECT
+}
+
+enum PRStatus {
+  DRAFT
+  SUBMITTED
+  PENDING_APPROVAL
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  CANCELLED
+  PARTIALLY_FULFILLED
+  FULFILLED
+  RECEIVED
+  ORDERED
+}
+
+enum ImportStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+enum ActivityStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  DELAYED
+  BLOCKED
+}
+
+enum LookaheadStatus {
+  PLANNED
+  READY
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum LookaheadPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum RequirementReadinessStatus {
+  PENDING
+  REQUESTED
+  PARTIALLY_AVAILABLE
+  AVAILABLE
+  BLOCKED
+}
+
+enum ApprovalStatus {
+  NOT_REQUIRED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PAID
+}
+
+enum ExtractStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  PAID
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COST CONTROL — INVOICES & EXTRACTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Invoice {
+  id              String        @id @default(cuid())
+  projectId       String
+  invoiceNumber   String
+  date            DateTime      @db.Date
+  vendor          String
+  costItemId      String?
+  description     String?
+  amountBeforeTax Decimal       @db.Decimal(18, 4)
+  taxAmount       Decimal       @default(0) @db.Decimal(18, 4)
+  grossAmount     Decimal       @db.Decimal(18, 4)
+  currency        String        @default("SAR")
+  status          InvoiceStatus @default(DRAFT)
+  notes           String?
+  createdById     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project  Project   @relation(fields: [projectId],  references: [id], onDelete: Cascade)
+  costItem CostItem? @relation(fields: [costItemId], references: [id], onDelete: SetNull)
+  creator  User?     @relation("InvoiceCreator",     fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, invoiceNumber])
+  @@index([projectId])
+  @@index([date])
+  @@index([status])
+  @@map("invoices")
+}
+
+model Extract {
+  id              String        @id @default(cuid())
+  projectId       String
+  extractNumber   String
+  date            DateTime      @db.Date
+  description     String?
+  amountBeforeTax Decimal       @db.Decimal(18, 4)
+  taxAmount       Decimal       @default(0) @db.Decimal(18, 4)
+  totalAmount     Decimal       @db.Decimal(18, 4)
+  currency        String        @default("SAR")
+  status          ExtractStatus @default(DRAFT)
+  notes           String?
+  createdById     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project Project @relation(fields: [projectId],  references: [id], onDelete: Cascade)
+  creator User?   @relation("ExtractCreator",     fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, extractNumber])
+  @@index([projectId])
+  @@index([date])
+  @@index([status])
+  @@map("extracts")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOCUMENTS / ATTACHMENTS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Document {
+  id           String  @id @default(cuid())
+  entityType   String  // 'project' | 'purchase_request' | 'activity' | 'invoice' | 'extract'
+  entityId     String
+  fileName     String  // stored file name on disk
+  originalName String  // original upload file name
+  mimeType     String
+  size         Int     // bytes
+  category     String  @default("general")
+  title        String?
+  description  String?
+  uploadedById String?
+  storagePath  String  // relative from uploads root
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  uploadedBy   User? @relation("DocumentUploader", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([uploadedById])
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NOTIFICATIONS
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Notification {
+  id         String           @id @default(cuid())
+  userId     String
+  title      String
+  body       String?
+  type       NotificationType @default(INFO)
+  isRead     Boolean          @default(false)
+  entityType String?
+  entityId   String?
+  route      String?
+
+  createdAt DateTime @default(now())
+
+  user User @relation("UserNotifications", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, isRead])
+  @@index([createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ACTION_RESULT
+}
