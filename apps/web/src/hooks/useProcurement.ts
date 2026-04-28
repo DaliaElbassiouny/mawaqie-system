@@ -65,21 +65,91 @@ export function useDeletePurchaseRequest() {
   });
 }
 
+export function useSubmitPurchaseRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      procurementApi.submit(id, { note }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['procurement'] });
+    },
+  });
+}
+
+export function useApprovePRStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      procurementApi.approveStage(id, { note }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['procurement'] });
+    },
+  });
+}
+
+export function useRejectPRStage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, note }: { id: string; note?: string }) =>
+      procurementApi.rejectStage(id, { note }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['procurement'] });
+    },
+  });
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export type PRStatus =
   | 'DRAFT'
   | 'SUBMITTED'
+  | 'PENDING_APPROVAL'
   | 'UNDER_REVIEW'
   | 'APPROVED'
   | 'REJECTED'
   | 'CANCELLED'
   | 'PARTIALLY_FULFILLED'
   | 'FULFILLED'
-  | 'RECEIVED';
+  | 'RECEIVED'
+  | 'ORDERED';
+
+export type PRApprovalStage =
+  | 'DRAFT'
+  | 'PROCUREMENT_REVIEW'
+  | 'COST_REVIEW'
+  | 'PM_REVIEW'
+  | 'FINAL_REVIEW'
+  | 'COMPLETED'
+  | 'REJECTED';
 
 export type PRPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type PRRequirementType = 'MATERIALS' | 'EQUIPMENT' | 'SERVICES' | 'OTHER';
+
+export type PRApprovalStep = {
+  id: string;
+  stage: PRApprovalStage;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  note?: string | null;
+  decidedAt?: string | null;
+  createdAt: string;
+  actor?: { id: string; nameAr: string; nameEn?: string | null } | null;
+};
+
+export type PurchaseRequestItem = {
+  id: string;
+  lineNumber: number;
+  titleAr: string;
+  titleEn?: string | null;
+  description?: string | null;
+  quantity?: string | null;
+  unit?: string | null;
+  unitPrice?: string | null;
+  estimatedTotal?: string | null;
+  approvedQuantity?: string | null;
+  approvedUnitPrice?: string | null;
+  approvedTotal?: string | null;
+  notes?: string | null;
+};
 
 export type PurchaseRequest = {
   id: string;
@@ -90,6 +160,7 @@ export type PurchaseRequest = {
   requirementType: PRRequirementType;
   priority: PRPriority;
   status: PRStatus;
+  currentStage: PRApprovalStage;
   currency: string;
   quantity?: string | null;
   unit?: string | null;
@@ -106,6 +177,9 @@ export type PurchaseRequest = {
   activity?: { id: string; code: string; nameAr: string; status: string } | null;
   requester?: { id: string; nameAr: string; nameEn?: string | null } | null;
   approvedBy?: { id: string; nameAr: string } | null;
+  // Present only in detail response (GET /requests/:id); absent in list response
+  items?: PurchaseRequestItem[];
+  approvalSteps?: PRApprovalStep[];
 };
 
 export type PurchaseRequestsPage = {

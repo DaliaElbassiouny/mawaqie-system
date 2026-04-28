@@ -1,10 +1,12 @@
 import {
   ActivityStatus,
+  ApprovalStepStatus,
   ApprovalStatus,
   ExtractStatus,
   InvoiceStatus,
   LookaheadPriority,
   LookaheadStatus,
+  PRApprovalStage,
   PRStatus,
   PrismaClient,
   ProjectSourceType,
@@ -105,6 +107,7 @@ const roleDefinitions = [
       'procurement:view',
       'procurement:create',
       'procurement:update',
+      'procurement:approve',
       'settings:view',
       'settings:update',
       'reports:view',
@@ -153,6 +156,8 @@ const roleDefinitions = [
       'cost:view',
       'cost:create',
       'cost:update',
+      'procurement:view',
+      'procurement:approve',
       'reports:view',
       'reports:export',
     ],
@@ -577,6 +582,28 @@ async function main() {
   }
   console.log('Seeded demo users');
 
+  await prisma.project.deleteMany({
+    where: {
+      code: {
+        in: ['momo99', 'Coupon Code test'],
+      },
+    },
+  });
+  await prisma.tender.deleteMany({
+    where: {
+      code: {
+        in: ['Coupon Code test'],
+      },
+    },
+  });
+  await prisma.client.deleteMany({
+    where: {
+      code: {
+        in: ['momo99'],
+      },
+    },
+  });
+
   const clients = {
     national: await prisma.client.upsert({
       where: { code: 'CLIENT-001' },
@@ -913,6 +940,48 @@ async function main() {
         notes: 'تسعير واجهات ألمنيوم وستائر زجاجية.',
       },
     }),
+    servicesHub: await prisma.tender.upsert({
+      where: { code: 'TND-2025-007' },
+      update: {
+        nameAr: 'مبنى الخدمات المركزية',
+        nameEn: 'Central Services Building',
+        clientId: clients.development.id,
+        status: TenderStatus.CONTRACTED,
+        location: 'الخبر',
+        projectType: 'مرافق وخدمات',
+        leadSource: 'عميل مباشر',
+        currency: 'SAR',
+        estimatedValue: 6150000,
+        submittedValue: 5980000,
+        bidReceiptDate: d('2026-03-12'),
+        dueDate: d('2026-03-30'),
+        submittedAt: d('2026-03-29'),
+        awardedAt: d('2026-04-06'),
+        bidResult: 'ترسية',
+        assignedEngineer: 'سارة القحطاني',
+        notes: 'مشروع خدمات مساندة يضم غرف الخدمات وسطح الخدمات مع تعديلات تنسيقية لأعمال MEP.',
+      },
+      create: {
+        code: 'TND-2025-007',
+        nameAr: 'مبنى الخدمات المركزية',
+        nameEn: 'Central Services Building',
+        clientId: clients.development.id,
+        status: TenderStatus.CONTRACTED,
+        location: 'الخبر',
+        projectType: 'مرافق وخدمات',
+        leadSource: 'عميل مباشر',
+        currency: 'SAR',
+        estimatedValue: 6150000,
+        submittedValue: 5980000,
+        bidReceiptDate: d('2026-03-12'),
+        dueDate: d('2026-03-30'),
+        submittedAt: d('2026-03-29'),
+        awardedAt: d('2026-04-06'),
+        bidResult: 'ترسية',
+        assignedEngineer: 'سارة القحطاني',
+        notes: 'مشروع خدمات مساندة يضم غرف الخدمات وسطح الخدمات مع تعديلات تنسيقية لأعمال MEP.',
+      },
+    }),
   };
 
   const projects = {
@@ -1052,6 +1121,40 @@ async function main() {
         notes: 'أعمال مباشرة للصيانة والتشطيبات الخفيفة.',
       },
     }),
+    servicesHub: await prisma.project.upsert({
+      where: { code: 'PRJ-2025-003' },
+      update: {
+        nameAr: 'مبنى الخدمات المركزية',
+        nameEn: 'Central Services Building',
+        tenderId: tenders.servicesHub.id,
+        sourceType: ProjectSourceType.TENDER,
+        companyCode: 'EAST',
+        location: 'الخبر',
+        projectType: 'مرافق وخدمات',
+        currency: 'SAR',
+        status: ProjectStatus.ACTIVE,
+        contractValue: 5980000,
+        startDate: d('2026-04-08'),
+        endDate: d('2026-10-15'),
+        notes: 'المشروع في وضع تنفيذي جيد، لكن تكلفة أعمال MEP ارتفعت بسبب تحويلات مسارات وخدمات إضافية مطلوبة من الاستشاري.',
+      },
+      create: {
+        code: 'PRJ-2025-003',
+        nameAr: 'مبنى الخدمات المركزية',
+        nameEn: 'Central Services Building',
+        tenderId: tenders.servicesHub.id,
+        sourceType: ProjectSourceType.TENDER,
+        companyCode: 'EAST',
+        location: 'الخبر',
+        projectType: 'مرافق وخدمات',
+        currency: 'SAR',
+        status: ProjectStatus.ACTIVE,
+        contractValue: 5980000,
+        startDate: d('2026-04-08'),
+        endDate: d('2026-10-15'),
+        notes: 'المشروع في وضع تنفيذي جيد، لكن تكلفة أعمال MEP ارتفعت بسبب تحويلات مسارات وخدمات إضافية مطلوبة من الاستشاري.',
+      },
+    }),
   };
 
   const demoProjectIds = Object.values(projects).map((project) => project.id);
@@ -1059,17 +1162,86 @@ async function main() {
     where: { projectId: { in: demoProjectIds } },
     select: { id: true },
   });
+  const demoPurchaseRequests = await prisma.purchaseRequest.findMany({
+    where: { projectId: { in: demoProjectIds } },
+    select: { id: true },
+  });
+  const demoInvoices = await prisma.invoice.findMany({
+    where: { projectId: { in: demoProjectIds } },
+    select: { id: true },
+  });
+  const demoExtracts = await prisma.extract.findMany({
+    where: { projectId: { in: demoProjectIds } },
+    select: { id: true },
+  });
+  const demoPurchaseRequestIds = demoPurchaseRequests.map((request) => request.id);
+  const demoInvoiceIds = demoInvoices.map((invoice) => invoice.id);
+  const demoExtractIds = demoExtracts.map((extract) => extract.id);
 
   if (demoLogIds.length > 0) {
     await prisma.dailyLogActivity.deleteMany({
       where: { dailyLogId: { in: demoLogIds.map((log) => log.id) } },
     });
   }
+
+  if (demoPurchaseRequestIds.length > 0) {
+    await prisma.document.deleteMany({
+      where: {
+        entityType: 'purchase_request',
+        entityId: { in: demoPurchaseRequestIds },
+      },
+    });
+    await prisma.notification.deleteMany({
+      where: {
+        entityType: 'purchase_request',
+        entityId: { in: demoPurchaseRequestIds },
+      },
+    });
+    await prisma.purchaseRequestApprovalStep.deleteMany({
+      where: { prId: { in: demoPurchaseRequestIds } },
+    });
+    await prisma.purchaseRequestItem.deleteMany({
+      where: { prId: { in: demoPurchaseRequestIds } },
+    });
+  }
+
+  if (demoInvoiceIds.length > 0) {
+    await prisma.document.deleteMany({
+      where: {
+        entityType: 'invoice',
+        entityId: { in: demoInvoiceIds },
+      },
+    });
+    await prisma.notification.deleteMany({
+      where: {
+        entityType: 'invoice',
+        entityId: { in: demoInvoiceIds },
+      },
+    });
+  }
+
+  if (demoExtractIds.length > 0) {
+    await prisma.document.deleteMany({
+      where: {
+        entityType: 'extract',
+        entityId: { in: demoExtractIds },
+      },
+    });
+    await prisma.notification.deleteMany({
+      where: {
+        entityType: 'extract',
+        entityId: { in: demoExtractIds },
+      },
+    });
+  }
+
   await prisma.dailyLog.deleteMany({ where: { projectId: { in: demoProjectIds } } });
+  await prisma.purchaseRequest.deleteMany({ where: { projectId: { in: demoProjectIds } } });
+  await prisma.invoice.deleteMany({ where: { projectId: { in: demoProjectIds } } });
+  await prisma.extract.deleteMany({ where: { projectId: { in: demoProjectIds } } });
   await prisma.operationActivity.deleteMany({ where: { projectId: { in: demoProjectIds } } });
   await prisma.operationSchedule.deleteMany({ where: { projectId: { in: demoProjectIds } } });
   await prisma.costItem.deleteMany({ where: { projectId: { in: demoProjectIds } } });
-  await prisma.purchaseRequest.deleteMany({ where: { projectId: { in: demoProjectIds } } });
   await prisma.userRole.deleteMany({ where: { projectId: { in: demoProjectIds } } });
 
   const teamAssignments = [
@@ -1087,6 +1259,11 @@ async function main() {
     { projectId: projects.camp.id, userId: demoUsers.ali.id, roleCode: 'SITE_ENGINEER' },
     { projectId: projects.maintenance.id, userId: demoUsers.sara.id, roleCode: 'PROJECT_MANAGER' },
     { projectId: projects.maintenance.id, userId: demoUsers.yousef.id, roleCode: 'COST_CONTROLLER' },
+    { projectId: projects.servicesHub.id, userId: demoUsers.sara.id, roleCode: 'PROJECT_MANAGER' },
+    { projectId: projects.servicesHub.id, userId: demoUsers.noura.id, roleCode: 'PROCUREMENT_OFFICER' },
+    { projectId: projects.servicesHub.id, userId: demoUsers.yousef.id, roleCode: 'COST_CONTROLLER' },
+    { projectId: projects.servicesHub.id, userId: demoUsers.ali.id, roleCode: 'SITE_ENGINEER' },
+    { projectId: projects.servicesHub.id, userId: demoUsers.mariam.id, roleCode: 'SITE_ENGINEER' },
   ];
 
   await prisma.userRole.createMany({
@@ -1106,6 +1283,8 @@ async function main() {
     { projectId: projects.labs.id, key: 'labs-may', year: 2026, month: 5, title: 'الهيكل السفلي', notes: 'صب الميدات والتجهيزات الأولية.' },
     { projectId: projects.camp.id, key: 'camp-apr', year: 2026, month: 4, title: 'التجهيزات المؤقتة', notes: 'توريد الكونتينرات والخدمات المؤقتة.' },
     { projectId: projects.camp.id, key: 'camp-may', year: 2026, month: 5, title: 'مرحلة الإقفال', notes: 'استكمال العزل والتشطيبات الأولية.' },
+    { projectId: projects.servicesHub.id, key: 'services-apr', year: 2026, month: 4, title: 'غرف الخدمات والتهيئة', notes: 'التركيز على القواعد وخدمات MEP الأرضية.' },
+    { projectId: projects.servicesHub.id, key: 'services-may', year: 2026, month: 5, title: 'سطح الخدمات والأعمال الكهروميكانيكية', notes: 'متابعة التحويلات والتنسيق مع الاستشاري.' },
     { projectId: projects.maintenance.id, key: 'maint-mar', year: 2026, month: 3, title: 'إقفال الصيانة', notes: 'آخر أعمال التشطيب والتسليم.' },
   ];
 
@@ -1656,6 +1835,133 @@ async function main() {
     },
 
     {
+      projectId: projects.servicesHub.id,
+      scheduleId: scheduleByKey.get('services-apr')!,
+      responsibleUserId: demoUsers.ali.id,
+      ...buildActivitySeedData({
+        code: 'ACT-001',
+        nameAr: 'تجهيز الموقع وغرف الخدمات المؤقتة',
+        category: 'ADMIN',
+        location: 'المدخل الشرقي',
+        status: ActivityStatus.COMPLETED,
+        lookaheadStatus: LookaheadStatus.DONE,
+        priority: LookaheadPriority.MEDIUM,
+        plannedStart: '2026-04-08',
+        plannedEnd: '2026-04-10',
+        actualStart: '2026-04-08',
+        actualEnd: '2026-04-10',
+        progressPercent: 100,
+        expectedCost: 32000,
+        actualCost: 30000,
+      }),
+    },
+    {
+      projectId: projects.servicesHub.id,
+      scheduleId: scheduleByKey.get('services-apr')!,
+      responsibleUserId: demoUsers.mariam.id,
+      ...buildActivitySeedData({
+        code: 'ACT-002',
+        nameAr: 'خرسانة نظافة لغرف الخدمات',
+        category: 'CIVIL',
+        location: 'غرف الخدمات A و B',
+        status: ActivityStatus.COMPLETED,
+        lookaheadStatus: LookaheadStatus.DONE,
+        priority: LookaheadPriority.HIGH,
+        plannedStart: '2026-04-11',
+        plannedEnd: '2026-04-14',
+        actualStart: '2026-04-11',
+        actualEnd: '2026-04-15',
+        progressPercent: 100,
+        expectedCost: 145000,
+        actualCost: 156000,
+      }),
+    },
+    {
+      projectId: projects.servicesHub.id,
+      scheduleId: scheduleByKey.get('services-apr')!,
+      responsibleUserId: demoUsers.ali.id,
+      ...buildActivitySeedData({
+        code: 'ACT-003',
+        nameAr: 'قواعد وأعمدة غرف الخدمات',
+        category: 'CIVIL',
+        location: 'غرف الخدمات الرئيسية',
+        status: ActivityStatus.IN_PROGRESS,
+        lookaheadStatus: LookaheadStatus.IN_PROGRESS,
+        priority: LookaheadPriority.HIGH,
+        plannedStart: '2026-04-16',
+        plannedEnd: '2026-04-30',
+        actualStart: '2026-04-16',
+        progressPercent: 78,
+        labor: {
+          value: '7 حدادين + 4 نجارين',
+          status: RequirementReadinessStatus.AVAILABLE,
+        },
+        materials: {
+          value: 'حديد تسليح وقوالب معدنية',
+          status: RequirementReadinessStatus.AVAILABLE,
+        },
+        expectedCost: 560000,
+        actualCost: 612000,
+      }),
+    },
+    {
+      projectId: projects.servicesHub.id,
+      scheduleId: scheduleByKey.get('services-may')!,
+      responsibleUserId: demoUsers.mariam.id,
+      ...buildActivitySeedData({
+        code: 'ACT-004',
+        nameAr: 'تحويل مسارات MEP داخل غرف الخدمات',
+        category: 'MEP',
+        location: 'ممرات الخدمات والغرف الفنية',
+        status: ActivityStatus.DELAYED,
+        lookaheadStatus: LookaheadStatus.IN_PROGRESS,
+        priority: LookaheadPriority.HIGH,
+        plannedStart: '2026-04-24',
+        plannedEnd: '2026-05-05',
+        actualStart: '2026-04-24',
+        progressPercent: 62,
+        blockerReason: 'ملاحظات الاستشاري على مسارات الكابلات وخطوط المياه فرضت إعادة توزيع جزئية.',
+        labor: {
+          value: '3 فنيي كهرباء + 2 فنيي ميكانيكا',
+          status: RequirementReadinessStatus.AVAILABLE,
+        },
+        materials: {
+          value: 'صواني كابلات ومواسير مجلفنة وصمامات',
+          status: RequirementReadinessStatus.AVAILABLE,
+        },
+        equipment: {
+          value: 'رافعة مقصية وأجهزة لحام',
+          status: RequirementReadinessStatus.AVAILABLE,
+        },
+        expectedCost: 280000,
+        actualCost: 325000,
+        notes: 'العمل مستمر لكن التكلفة ارتفعت نتيجة التعديلات وإعادة التنفيذ في جزء من المسار.',
+      }),
+    },
+    {
+      projectId: projects.servicesHub.id,
+      scheduleId: scheduleByKey.get('services-may')!,
+      responsibleUserId: demoUsers.ali.id,
+      ...buildActivitySeedData({
+        code: 'ACT-005',
+        nameAr: 'قواعد سطح الخدمات وحوامل المعدات',
+        category: 'MECHANICAL',
+        location: 'سطح الخدمات',
+        status: ActivityStatus.NOT_STARTED,
+        lookaheadStatus: LookaheadStatus.READY,
+        priority: LookaheadPriority.MEDIUM,
+        plannedStart: '2026-05-07',
+        plannedEnd: '2026-05-14',
+        progressPercent: 0,
+        materials: {
+          value: 'قواعد معدنية وحوامل ميكانيكية',
+          status: RequirementReadinessStatus.AVAILABLE,
+        },
+        expectedCost: 175000,
+      }),
+    },
+
+    {
       projectId: projects.maintenance.id,
       scheduleId: scheduleByKey.get('maint-mar')!,
       responsibleUserId: demoUsers.ali.id,
@@ -1745,6 +2051,9 @@ async function main() {
     { projectId: projects.labs.id, code: 'COST-002', nameAr: 'خدمات وكهروميكانيك', category: 'MEP', totalCost: 1880000 },
     { projectId: projects.camp.id, code: 'COST-001', nameAr: 'توريد وتجهيز الموقع', category: 'PRELIMINARIES', totalCost: 410000 },
     { projectId: projects.camp.id, code: 'COST-002', nameAr: 'أعمال كهرباء مؤقتة', category: 'ELECTRICAL', totalCost: 95000 },
+    { projectId: projects.servicesHub.id, code: 'COST-001', nameAr: 'أعمال مدنية وغرف الخدمات', category: 'CIVIL', totalCost: 1450000 },
+    { projectId: projects.servicesHub.id, code: 'COST-002', nameAr: 'تحويلات وأعمال MEP', category: 'MEP', totalCost: 1550000 },
+    { projectId: projects.servicesHub.id, code: 'COST-003', nameAr: 'تجهيزات سطح الخدمات', category: 'PRELIMINARIES', totalCost: 520000 },
     { projectId: projects.maintenance.id, code: 'COST-001', nameAr: 'أعمال صيانة وتشطيب', category: 'FINISHING', totalCost: 185000 },
   ];
 
@@ -1780,168 +2089,385 @@ async function main() {
     });
   }
 
+  const buildPendingSteps = (): Array<{
+    stage: PRApprovalStage;
+    status: ApprovalStepStatus;
+    actorId: string | null;
+    decidedAt: Date | null;
+    note: string | null;
+  }> => [
+    { stage: 'PROCUREMENT_REVIEW', status: ApprovalStepStatus.PENDING, actorId: null, decidedAt: null, note: null },
+    { stage: 'COST_REVIEW', status: ApprovalStepStatus.PENDING, actorId: null, decidedAt: null, note: null },
+    { stage: 'PM_REVIEW', status: ApprovalStepStatus.PENDING, actorId: null, decidedAt: null, note: null },
+    { stage: 'FINAL_REVIEW', status: ApprovalStepStatus.PENDING, actorId: null, decidedAt: null, note: null },
+  ];
+
   const purchaseRequests = [
     {
       prNumber: 'PR-2026-001',
       projectId: projects.adminBuilding.id,
-      nameAr: 'توريد خرسانة جاهزة للقواعد',
-      nameEn: 'Ready-mix Concrete Supply for Foundations',
-      description: 'توريد خرسانة جاهزة C30/37 لصب القواعد الرئيسية — المرحلة الأولى',
+      activityId: activityMap.get(projects.adminBuilding.id + ':ACT-005')?.id ?? null,
+      nameAr: 'توريد حديد تسليح للقواعد والأعمدة',
+      nameEn: 'Rebar Supply for Foundations and Columns',
+      description: 'طلب توريد عاجل لحديد التسليح للدفعة الأولى من القواعد والأعمدة قبل بدء الصب.',
       requirementType: 'MATERIALS',
       priority: LookaheadPriority.HIGH,
       status: PRStatus.SUBMITTED,
-      quantity: 450,
-      unit: 'م³',
-      totalAmount: 210000,
-      vendor: 'شركة الرياض للخرسانة الجاهزة',
-      expectedDeliveryDate: d('2026-05-05'),
-      requestedById: demoUsers.rashed.id,
-      requestedAt: d('2026-04-23'),
-      notes: 'مرتبط بصب القواعد الرئيسية. يجب تأكيد المورد قبل 72 ساعة من الصب.',
+      currentStage: 'PROCUREMENT_REVIEW',
+      quantity: 78,
+      unit: 'طن',
+      totalAmount: 236500,
+      vendor: 'شركة الحديد الوطنية',
+      expectedDeliveryDate: d('2026-05-03'),
+      requestedById: demoUsers.ali.id,
+      requestedAt: d('2026-04-24'),
+      notes: 'الطلب تم إنشاؤه وإرساله مباشرة. مطلوب تأكيد جدول التوريد اليوم.',
+      approvalNote: null,
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'حديد تسليح قطر 16 مم', titleEn: '16 mm Rebar', description: 'للقواعد الرئيسية', quantity: 42, unit: 'طن', unitPrice: 3050, estimatedTotal: 128100, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'تسليم على دفعتين' },
+        { titleAr: 'حديد تسليح قطر 12 مم', titleEn: '12 mm Rebar', description: 'للأعمدة والكانات', quantity: 36, unit: 'طن', unitPrice: 3011.11, estimatedTotal: 108400, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'مطابقة لمواصفة المشروع' },
+      ],
+      approvalSteps: buildPendingSteps(),
     },
     {
       prNumber: 'PR-2026-002',
       projectId: projects.adminBuilding.id,
-      nameAr: 'حجز مضخة خرسانة وهزازات',
-      nameEn: 'Concrete Pump and Vibrators Reservation',
-      description: 'حجز مضخة خرسانة 52م + 4 هزازات لأعمال صب القواعد',
-      requirementType: 'EQUIPMENT',
-      priority: LookaheadPriority.HIGH,
-      status: PRStatus.APPROVED,
-      quantity: 1,
-      unit: 'وحدة',
-      totalAmount: 32000,
-      vendor: 'مؤسسة المعدات الثقيلة السعودية',
-      expectedDeliveryDate: d('2026-05-04'),
-      requestedById: demoUsers.noura.id,
-      requestedAt: d('2026-04-24'),
-      notes: 'بانتظار تأكيد الموعد النهائي من المورد.',
-    },
-    {
-      prNumber: 'PR-2026-003',
-      projectId: projects.labs.id,
-      nameAr: 'توريد حديد تسليح الميدات',
-      nameEn: 'Foundation Rebar Supply',
-      description: 'حديد تسليح قطر 12-25 مم لميدات الهيكل الإنشائي',
-      requirementType: 'MATERIALS',
-      priority: LookaheadPriority.HIGH,
-      status: PRStatus.FULFILLED,
-      quantity: 85,
-      unit: 'طن',
-      totalAmount: 240000,
-      vendor: 'شركة الحديد الوطنية',
-      expectedDeliveryDate: d('2026-04-28'),
-      actualDeliveryDate: d('2026-04-29'),
-      requestedById: demoUsers.sara.id,
-      requestedAt: d('2026-04-20'),
-      notes: 'تم الاستلام بالكامل وجارٍ مراجعة الكميات.',
-    },
-    {
-      prNumber: 'PR-2026-004',
-      projectId: projects.camp.id,
-      nameAr: 'توريد كونتينرات سكنية للموقع',
-      nameEn: 'Residential Containers for Site Camp',
-      description: 'كونتينرات سكنية 20 قدم مع تشطيب مُسبق وتكييف',
+      activityId: activityMap.get(projects.adminBuilding.id + ':ACT-006')?.id ?? null,
+      nameAr: 'معدات رفع وسقالة محيطية للواجهة الشرقية',
+      nameEn: 'Lifting Equipment and Perimeter Scaffolding',
+      description: 'تأجير معدات رفع وسقالات للوصول إلى الواجهة الشرقية أثناء أعمال الشدات.',
       requirementType: 'EQUIPMENT',
       priority: LookaheadPriority.MEDIUM,
       status: PRStatus.UNDER_REVIEW,
-      quantity: 12,
-      unit: 'وحدة',
-      totalAmount: 145000,
-      vendor: 'مؤسسة الحلول المؤقتة',
-      expectedDeliveryDate: d('2026-05-10'),
-      requestedById: demoUsers.ali.id,
-      requestedAt: d('2026-04-25'),
-      notes: 'مطلوب قبل استكمال أعمال التشطيبات المؤقتة.',
+      currentStage: 'COST_REVIEW',
+      quantity: 1,
+      unit: 'حزمة',
+      totalAmount: 84500,
+      vendor: 'مؤسسة المعدات الثقيلة السعودية',
+      expectedDeliveryDate: d('2026-05-06'),
+      requestedById: demoUsers.rashed.id,
+      requestedAt: d('2026-04-22'),
+      notes: 'تمت مراجعة المشتريات وجارٍ تدقيق تسعيرة التأجير.',
+      approvalNote: null,
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'رافعة مقصية', titleEn: 'Scissor Lift', description: 'استخدام لمدة 14 يومًا', quantity: 2, unit: 'وحدة', unitPrice: 12500, estimatedTotal: 25000, approvedQuantity: 2, approvedUnitPrice: 12000, approvedTotal: 24000, notes: 'تم تخفيض السعر بعد التفاوض' },
+        { titleAr: 'سقالة محيطية', titleEn: 'Perimeter Scaffolding', description: 'توريد وتركيب', quantity: 1, unit: 'حزمة', unitPrice: 59500, estimatedTotal: 59500, approvedQuantity: 1, approvedUnitPrice: 59500, approvedTotal: 59500, notes: 'تشمل التركيب والفك' },
+      ],
+      approvalSteps: [
+        { stage: 'PROCUREMENT_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.noura.id, decidedAt: d('2026-04-23'), note: 'تمت مراجعة الموردين وتأكيد أفضل عرض فني.' },
+        ...buildPendingSteps().slice(1),
+      ],
+    },
+    {
+      prNumber: 'PR-2026-003',
+      projectId: projects.servicesHub.id,
+      activityId: activityMap.get(projects.servicesHub.id + ':ACT-004')?.id ?? null,
+      nameAr: 'كابلات كهرباء وصواني لمسارات MEP',
+      nameEn: 'Electrical Cables and Trays for MEP Routes',
+      description: 'توريد كابلات رئيسية وصواني مجلفنة لمعالجة تعديل مسارات الخدمات داخل غرف الخدمات.',
+      requirementType: 'MATERIALS',
+      priority: LookaheadPriority.HIGH,
+      status: PRStatus.PENDING_APPROVAL,
+      currentStage: 'PM_REVIEW',
+      quantity: 640,
+      unit: 'م.ط',
+      totalAmount: 154000,
+      vendor: 'شركة التجهيزات الكهروميكانيكية الحديثة',
+      expectedDeliveryDate: d('2026-05-07'),
+      requestedById: demoUsers.mariam.id,
+      requestedAt: d('2026-04-23'),
+      notes: 'الطلب مرتبط مباشرة بتأخير نشاط MEP ويتطلب اعتماد مدير المشروع.',
+      approvalNote: null,
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'صواني كابلات مجلفنة', titleEn: 'Galvanized Cable Trays', description: 'مقاسات 200 و300 مم', quantity: 240, unit: 'م.ط', unitPrice: 125, estimatedTotal: 30000, approvedQuantity: 240, approvedUnitPrice: 118, approvedTotal: 28320, notes: 'مطابقة لاعتماد الاستشاري' },
+        { titleAr: 'كابلات تغذية نحاس', titleEn: 'Copper Power Cables', description: 'مسارات رئيسية', quantity: 400, unit: 'م.ط', unitPrice: 310, estimatedTotal: 124000, approvedQuantity: 400, approvedUnitPrice: 302, approvedTotal: 120800, notes: 'تم اعتماد بديل مكافئ فنيًا' },
+      ],
+      approvalSteps: [
+        { stage: 'PROCUREMENT_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.noura.id, decidedAt: d('2026-04-24'), note: 'تم التأكد من توافر المورد وخطة التسليم.' },
+        { stage: 'COST_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.yousef.id, decidedAt: d('2026-04-25'), note: 'الأسعار ضمن الموازنة بعد خصم 3.5%.' },
+        ...buildPendingSteps().slice(2),
+      ],
+    },
+    {
+      prNumber: 'PR-2026-004',
+      projectId: projects.servicesHub.id,
+      activityId: activityMap.get(projects.servicesHub.id + ':ACT-005')?.id ?? null,
+      nameAr: 'مضخات وخزانات خدمة لسطح الخدمات',
+      nameEn: 'Service Pumps and Tanks for Service Roof',
+      description: 'توريد حزمة مضخات وخزانين مع ملحقات التشغيل لغرف الخدمات وسطح الخدمات.',
+      requirementType: 'EQUIPMENT',
+      priority: LookaheadPriority.MEDIUM,
+      status: PRStatus.PENDING_APPROVAL,
+      currentStage: 'FINAL_REVIEW',
+      quantity: 1,
+      unit: 'حزمة',
+      totalAmount: 184500,
+      vendor: 'مؤسسة حلول الضخ والتحكم',
+      expectedDeliveryDate: d('2026-05-09'),
+      requestedById: demoUsers.sara.id,
+      requestedAt: d('2026-04-21'),
+      notes: 'الطلب اجتاز المراجعات التنفيذية وينتظر الاعتماد النهائي.',
+      approvalNote: null,
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'مضخة خدمة رئيسية', titleEn: 'Main Service Pump', description: 'مع لوحة تحكم', quantity: 2, unit: 'وحدة', unitPrice: 38500, estimatedTotal: 77000, approvedQuantity: 2, approvedUnitPrice: 37250, approvedTotal: 74500, notes: 'شامل الاختبارات الأولية' },
+        { titleAr: 'خزان FRP', titleEn: 'FRP Tank', description: 'سعة 15 م3', quantity: 2, unit: 'وحدة', unitPrice: 53750, estimatedTotal: 107500, approvedQuantity: 2, approvedUnitPrice: 52000, approvedTotal: 104000, notes: 'مع قواعد ومستلزمات تركيب' },
+      ],
+      approvalSteps: [
+        { stage: 'PROCUREMENT_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.noura.id, decidedAt: d('2026-04-22'), note: 'تمت مراجعة عروض الموردين واختيار العرض الأفضل.' },
+        { stage: 'COST_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.yousef.id, decidedAt: d('2026-04-23'), note: 'القيمة ضمن الحد المعتمد للمشروع.' },
+        { stage: 'PM_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.sara.id, decidedAt: d('2026-04-24'), note: 'تمت الموافقة تنفيذياً لارتباطها بخطة التشغيل.' },
+        ...buildPendingSteps().slice(3),
+      ],
     },
     {
       prNumber: 'PR-2026-005',
-      projectId: projects.adminBuilding.id,
-      nameAr: 'توريد شدات خشبية وقوائم فولاذية',
-      nameEn: 'Formwork Timber and Steel Props',
-      description: 'ألواح شدة خشبية + قوائم دعامات فولاذية للدور الأرضي والبدروم',
+      projectId: projects.maintenance.id,
+      activityId: activityMap.get(projects.maintenance.id + ':ACT-002')?.id ?? null,
+      nameAr: 'مواد عزل وسداد لفواصل سطح الخدمات',
+      nameEn: 'Waterproofing Materials for Service Roof',
+      description: 'توريد مواد عزل مرن وسداد لفواصل التمدد ضمن أعمال الصيانة النهائية.',
       requirementType: 'MATERIALS',
-      priority: LookaheadPriority.HIGH,
-      status: PRStatus.DRAFT,
-      quantity: 1200,
+      priority: LookaheadPriority.MEDIUM,
+      status: PRStatus.APPROVED,
+      currentStage: 'COMPLETED',
+      quantity: 1450,
       unit: 'م²',
-      totalAmount: 88000,
+      totalAmount: 96500,
+      vendor: 'شركة المواد العازلة المتقدمة',
+      expectedDeliveryDate: d('2026-04-18'),
+      actualDeliveryDate: d('2026-04-17'),
       requestedById: demoUsers.ali.id,
-      requestedAt: d('2026-04-26'),
-      notes: 'الكمية بحسب مساحة السقف الأول — قابلة للمراجعة.',
+      requestedAt: d('2026-04-10'),
+      notes: 'سلسلة اعتماد مكتملة وتم التوريد طبقًا للخطة.',
+      approvalNote: 'اعتماد نهائي مع توجيه بسرعة التنفيذ قبل إغلاق المشروع.',
+      approvedById: adminUser.id,
+      approvedAt: d('2026-04-14'),
+      items: [
+        { titleAr: 'رولات عزل بيتوميني', titleEn: 'Bituminous Waterproofing Rolls', description: 'سماكة 4 مم', quantity: 1200, unit: 'م²', unitPrice: 48, estimatedTotal: 57600, approvedQuantity: 1200, approvedUnitPrice: 46, approvedTotal: 55200, notes: 'اعتماد مواصفة BASF' },
+        { titleAr: 'مواد سداد فواصل', titleEn: 'Joint Sealant Materials', description: 'لفواصل التمدد', quantity: 250, unit: 'م.ط', unitPrice: 155.6, estimatedTotal: 38900, approvedQuantity: 250, approvedUnitPrice: 149.2, approvedTotal: 37300, notes: 'مع برايمر مخصص' },
+      ],
+      approvalSteps: [
+        { stage: 'PROCUREMENT_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.noura.id, decidedAt: d('2026-04-11'), note: 'تم اعتماد المورد بعد مقارنة فنية وسعرية.' },
+        { stage: 'COST_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.yousef.id, decidedAt: d('2026-04-12'), note: 'تم خفض القيمة الإجمالية 4,000 ريال.' },
+        { stage: 'PM_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.sara.id, decidedAt: d('2026-04-13'), note: 'تمت الموافقة لتأثيرها المباشر على التسليم النهائي.' },
+        { stage: 'FINAL_REVIEW', status: 'APPROVED' as const, actorId: adminUser.id, decidedAt: d('2026-04-14'), note: 'اعتماد نهائي وإغلاق المسار.' },
+      ],
     },
     {
       prNumber: 'PR-2026-006',
-      projectId: projects.labs.id,
-      nameAr: 'مواسير HDPE لتمديدات الصرف الأرضي',
-      nameEn: 'HDPE Pipes for Underground Drainage',
-      description: 'مواسير HDPE قطر 200-400 مم مع غرف تفتيش — المسار الجنوبي',
-      requirementType: 'MATERIALS',
-      priority: LookaheadPriority.MEDIUM,
-      status: PRStatus.SUBMITTED,
-      quantity: 320,
-      unit: 'م.ط',
-      totalAmount: 67000,
-      vendor: 'شركة البلاستيك الصناعي',
-      expectedDeliveryDate: d('2026-05-12'),
-      requestedById: demoUsers.mariam.id,
-      requestedAt: d('2026-04-26'),
-      notes: 'مرتبط بنشاط تمديدات السباكة الأرضية.',
-    },
-    {
-      prNumber: 'PR-2026-007',
       projectId: projects.adminBuilding.id,
-      nameAr: 'عوازل رطوبة للأساسات',
-      nameEn: 'Foundation Waterproofing Materials',
-      description: 'أغشية عزل مائي + طبقة بيتومينية للأساسات والجدران المدفونة',
+      activityId: activityMap.get(projects.adminBuilding.id + ':ACT-007')?.id ?? null,
+      nameAr: 'شدات خشبية إضافية للدور الأرضي',
+      nameEn: 'Additional Timber Formwork for Ground Floor',
+      description: 'طلب شدات خشبية إضافية بعد تعديل مساحات الصب في الواجهة الشمالية.',
       requirementType: 'MATERIALS',
       priority: LookaheadPriority.MEDIUM,
       status: PRStatus.REJECTED,
-      quantity: 2400,
+      currentStage: 'REJECTED',
+      quantity: 980,
       unit: 'م²',
-      totalAmount: 54000,
-      requestedById: demoUsers.rashed.id,
-      requestedAt: d('2026-04-18'),
-      approvalNote: 'تم رفضه لأن المواصفة المطلوبة غير متاحة — يُعاد تحديد المواصفة.',
-      notes: 'سيُعاد تقديم الطلب بمواصفة BASF.',
+      totalAmount: 74200,
+      vendor: 'مؤسسة الخشب الصناعي',
+      expectedDeliveryDate: d('2026-05-04'),
+      requestedById: demoUsers.ali.id,
+      requestedAt: d('2026-04-20'),
+      notes: 'تم رفض الطلب لحين اعتماد المساحات النهائية.',
+      approvalNote: 'الطلب مرفوض لأن الكميات غير مدعومة بمخطط محدث معتمد.',
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'ألواح شدة خشبية', titleEn: 'Timber Formwork Panels', description: 'سماكة 18 مم', quantity: 980, unit: 'م²', unitPrice: 68, estimatedTotal: 66640, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'الكميات تحتاج مراجعة هندسية' },
+        { titleAr: 'إكسسوارات تثبيت', titleEn: 'Fixing Accessories', description: 'مستلزمات تركيب', quantity: 1, unit: 'حزمة', unitPrice: 7560, estimatedTotal: 7560, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'تُطلب لاحقًا عند إعادة التقديم' },
+      ],
+      approvalSteps: [
+        { stage: 'PROCUREMENT_REVIEW', status: 'REJECTED' as const, actorId: demoUsers.noura.id, decidedAt: d('2026-04-21'), note: 'الطلب يحتاج مخططًا محدثًا وكشف كميات معتمدًا قبل المضي.' },
+        ...buildPendingSteps().slice(1),
+      ],
+    },
+    {
+      prNumber: 'PR-2026-007',
+      projectId: projects.servicesHub.id,
+      activityId: activityMap.get(projects.servicesHub.id + ':ACT-004')?.id ?? null,
+      nameAr: 'معدات رفع إضافية لأعمال MEP',
+      nameEn: 'Additional Lifting Equipment for MEP Works',
+      description: 'تأجير رافعتين إضافيتين وأجهزة لحام بسبب تعديل مسارات الخدمات.',
+      requirementType: 'EQUIPMENT',
+      priority: LookaheadPriority.HIGH,
+      status: PRStatus.REJECTED,
+      currentStage: 'REJECTED',
+      quantity: 1,
+      unit: 'حزمة',
+      totalAmount: 132000,
+      vendor: 'شركة حلول الرفع المتخصص',
+      expectedDeliveryDate: d('2026-05-08'),
+      requestedById: demoUsers.mariam.id,
+      requestedAt: d('2026-04-23'),
+      notes: 'تم رفضه في مراجعة التكاليف واقتراح بديل أقل كلفة.',
+      approvalNote: 'القيمة أعلى من الحد المسموح وتم طلب إعادة طرح بديل اقتصادي.',
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'رافعة مقصية إضافية', titleEn: 'Additional Scissor Lift', description: 'لمسارات غرف الخدمات', quantity: 2, unit: 'وحدة', unitPrice: 24000, estimatedTotal: 48000, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'يُراجع مع خطة التنفيذ' },
+        { titleAr: 'أجهزة لحام وتجهيز', titleEn: 'Welding and Fitting Equipment', description: 'أعمال تعديل المسارات', quantity: 1, unit: 'حزمة', unitPrice: 84000, estimatedTotal: 84000, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'يتضمن تأجيرًا لمدة 21 يومًا' },
+      ],
+      approvalSteps: [
+        { stage: 'PROCUREMENT_REVIEW', status: 'APPROVED' as const, actorId: demoUsers.noura.id, decidedAt: d('2026-04-24'), note: 'المورد مناسب زمنيًا وتمت مراجعة العرض الفني.' },
+        { stage: 'COST_REVIEW', status: 'REJECTED' as const, actorId: demoUsers.yousef.id, decidedAt: d('2026-04-25'), note: 'التكلفة تتجاوز المخصص الحالي ويجب إعادة التفاوض أو تقليل النطاق.' },
+        ...buildPendingSteps().slice(2),
+      ],
     },
     {
       prNumber: 'PR-2026-008',
       projectId: projects.labs.id,
-      nameAr: 'خدمات مختبر اختبار الخرسانة',
-      nameEn: 'Concrete Testing Lab Services',
-      description: 'اختبارات ضغط الخرسانة والتربة خلال مرحلة الأساسات',
-      requirementType: 'SERVICES',
-      priority: LookaheadPriority.LOW,
-      status: PRStatus.APPROVED,
-      quantity: 1,
-      unit: 'عقد',
-      totalAmount: 18500,
-      vendor: 'مختبرات الجودة المعتمدة',
-      expectedDeliveryDate: d('2026-05-01'),
+      activityId: activityMap.get(projects.labs.id + ':ACT-003')?.id ?? null,
+      nameAr: 'توريد حديد تسليح للنشاط المتعثر',
+      nameEn: 'Rebar Supply for Blocked Activity',
+      description: 'طلب شراء مرتبط مباشرة بالنشاط المحجوب بسبب عدم توافر حديد الميدات.',
+      requirementType: 'MATERIALS',
+      priority: LookaheadPriority.HIGH,
+      status: PRStatus.SUBMITTED,
+      currentStage: 'PROCUREMENT_REVIEW',
+      quantity: 52,
+      unit: 'طن',
+      totalAmount: 158600,
+      vendor: 'شركة الحديد الوطنية',
+      expectedDeliveryDate: d('2026-05-02'),
       requestedById: demoUsers.sara.id,
-      requestedAt: d('2026-04-22'),
-      notes: 'يشمل 30 اختبار ضغط + تقارير شهرية.',
+      requestedAt: d('2026-04-26'),
+      notes: 'هذا الطلب يفتح النشاط المحجوب ACT-003 إذا تم تأمينه سريعًا.',
+      approvalNote: null,
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'حديد تسليح D12', titleEn: 'D12 Rebar', description: 'للميدات الطرفية', quantity: 22, unit: 'طن', unitPrice: 3040, estimatedTotal: 66880, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'مرتبط بنشاط محجوب' },
+        { titleAr: 'حديد تسليح D16', titleEn: 'D16 Rebar', description: 'للميدات الرئيسية', quantity: 30, unit: 'طن', unitPrice: 3057.33, estimatedTotal: 91720, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'أولوية قصوى للموقع' },
+      ],
+      approvalSteps: buildPendingSteps(),
+    },
+    {
+      prNumber: 'PR-2026-009',
+      projectId: projects.labs.id,
+      activityId: activityMap.get(projects.labs.id + ':ACT-005')?.id ?? null,
+      nameAr: 'خرسانة جاهزة عاجلة لصب الميدات',
+      nameEn: 'Urgent Ready-Mix Concrete for Grade Beams',
+      description: 'طلب عاجل لتأمين خرسانة جاهزة بمجرد إنهاء تجهيزات الميدات.',
+      requirementType: 'MATERIALS',
+      priority: LookaheadPriority.HIGH,
+      status: PRStatus.SUBMITTED,
+      currentStage: 'PROCUREMENT_REVIEW',
+      quantity: 280,
+      unit: 'م³',
+      totalAmount: 137200,
+      vendor: 'شركة الرياض للخرسانة الجاهزة',
+      expectedDeliveryDate: d('2026-05-11'),
+      requestedById: demoUsers.mariam.id,
+      requestedAt: d('2026-04-27'),
+      notes: 'طلب عالي الأولوية ومصنف كعاجل لضمان عدم ضياع نافذة الصب.',
+      approvalNote: null,
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'خرسانة جاهزة C30', titleEn: 'Ready-Mix Concrete C30', description: 'لصب الميدات', quantity: 280, unit: 'م³', unitPrice: 490, estimatedTotal: 137200, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'يشمل إضافات مقاومة للكبريتات' },
+      ],
+      approvalSteps: buildPendingSteps(),
+    },
+    {
+      prNumber: 'PR-2026-010',
+      projectId: projects.camp.id,
+      activityId: activityMap.get(projects.camp.id + ':ACT-004')?.id ?? null,
+      nameAr: 'أدوات سلامة ولوحات إرشادية للموقع',
+      nameEn: 'Safety Tools and Signage for Site Camp',
+      description: 'توريد معدات سلامة أساسية ولوحات إرشادية للممرات والمداخل المؤقتة.',
+      requirementType: 'OTHER',
+      priority: LookaheadPriority.LOW,
+      status: PRStatus.SUBMITTED,
+      currentStage: 'PROCUREMENT_REVIEW',
+      quantity: 1,
+      unit: 'حزمة',
+      totalAmount: 12650,
+      vendor: 'مؤسسة السلامة المتقدمة',
+      expectedDeliveryDate: d('2026-05-01'),
+      requestedById: demoUsers.ali.id,
+      requestedAt: d('2026-04-25'),
+      notes: 'طلب اعتيادي منخفض الأولوية لكنه مطلوب قبل زيارة السلامة الأسبوعية.',
+      approvalNote: null,
+      approvedById: null,
+      approvedAt: null,
+      items: [
+        { titleAr: 'طفايات حريق', titleEn: 'Fire Extinguishers', description: 'بودرة جافة 6 كجم', quantity: 8, unit: 'وحدة', unitPrice: 275, estimatedTotal: 2200, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'للمكاتب والكونتينرات' },
+        { titleAr: 'لوحات تحذيرية وإرشادية', titleEn: 'Safety Signage', description: 'لوحات للممرات ومخارج الطوارئ', quantity: 1, unit: 'حزمة', unitPrice: 4450, estimatedTotal: 4450, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'مطابقة لاشتراطات السلامة' },
+        { titleAr: 'خوذات وسترات سلامة', titleEn: 'Safety Helmets and Vests', description: 'دفعة إضافية للعمالة الجديدة', quantity: 1, unit: 'حزمة', unitPrice: 6000, estimatedTotal: 6000, approvedQuantity: null, approvedUnitPrice: null, approvedTotal: null, notes: 'للاستخدام الفوري بالموقع' },
+      ],
+      approvalSteps: buildPendingSteps(),
     },
   ];
 
   for (const request of purchaseRequests) {
-    await prisma.purchaseRequest.upsert({
-      where: { prNumber: request.prNumber },
-      update: request,
-      create: request,
+    await prisma.purchaseRequest.create({
+      data: {
+        prNumber: request.prNumber,
+        projectId: request.projectId,
+        activityId: request.activityId,
+        nameAr: request.nameAr,
+        nameEn: request.nameEn,
+        description: request.description,
+        requirementType: request.requirementType,
+        priority: request.priority,
+        status: request.status,
+        currentStage: request.currentStage as any,
+        currency: 'SAR',
+        quantity: request.quantity,
+        unit: request.unit,
+        totalAmount: request.totalAmount,
+        vendor: request.vendor,
+        expectedDeliveryDate: request.expectedDeliveryDate,
+        actualDeliveryDate: request.actualDeliveryDate ?? null,
+        requestedById: request.requestedById,
+        requestedAt: request.requestedAt,
+        approvalNote: request.approvalNote,
+        approvedById: request.approvedById,
+        approvedAt: request.approvedAt,
+        notes: request.notes,
+        items: {
+          create: request.items.map((item, index) => ({
+            lineNumber: index + 1,
+            titleAr: item.titleAr,
+            titleEn: item.titleEn,
+            description: item.description,
+            quantity: item.quantity,
+            unit: item.unit,
+            unitPrice: item.unitPrice,
+            estimatedTotal: item.estimatedTotal,
+            approvedQuantity: item.approvedQuantity,
+            approvedUnitPrice: item.approvedUnitPrice,
+            approvedTotal: item.approvedTotal,
+            notes: item.notes,
+          })),
+        },
+        approvalSteps: {
+          create: request.approvalSteps as any,
+        },
+      },
     });
   }
 
   // ── Demo Notifications ────────────────────────────────────────────────────
   const adminUsers = await prisma.user.findMany({
-    where: { email: { in: ['admin@cdc-system.local', 'rashed.pm@cdc-system.local', 'noura.procurement@cdc-system.local'] } },
+    where: { email: { in: ['admin@cdc-system.local', 'rashed.pm@cdc-system.local', 'noura.proc@cdc-system.local'] } },
     select: { id: true, email: true },
   });
 
   const adminUserObj = adminUsers.find((u) => u.email === 'admin@cdc-system.local');
   const rashedUser = adminUsers.find((u) => u.email === 'rashed.pm@cdc-system.local');
-  const nouraUser = adminUsers.find((u) => u.email === 'noura.procurement@cdc-system.local');
+  const nouraUser = adminUsers.find((u) => u.email === 'noura.proc@cdc-system.local');
 
   await prisma.notification.deleteMany({
     where: { userId: { in: adminUsers.map((u) => u.id) } },
@@ -1949,18 +2475,18 @@ async function main() {
 
   const notificationDefs = [
     ...(adminUserObj ? [
-      { userId: adminUserObj.id, title: 'تمت الموافقة على طلب شراء', body: 'حجز مضخة خرسانة وهزازات — PR-2026-002', type: 'SUCCESS', entityType: 'purchase_request', isRead: false },
-      { userId: adminUserObj.id, title: 'طلب شراء قيد المراجعة', body: 'توريد كونتينرات سكنية للموقع — PR-2026-004', type: 'INFO', entityType: 'purchase_request', isRead: false },
-      { userId: adminUserObj.id, title: 'تم تنفيذ طلب شراء', body: 'توريد حديد تسليح الميدات — PR-2026-003', type: 'SUCCESS', entityType: 'purchase_request', isRead: true },
-      { userId: adminUserObj.id, title: 'تم رفض طلب شراء', body: 'عوازل رطوبة للأساسات — PR-2026-007', type: 'WARNING', entityType: 'purchase_request', isRead: true },
+      { userId: adminUserObj.id, title: 'اعتماد نهائي مكتمل', body: 'مواد عزل وسداد لفواصل سطح الخدمات — PR-2026-005', type: 'SUCCESS', entityType: 'purchase_request', isRead: false },
+      { userId: adminUserObj.id, title: 'طلب بانتظار الاعتماد النهائي', body: 'مضخات وخزانات خدمة لسطح الخدمات — PR-2026-004', type: 'INFO', entityType: 'purchase_request', isRead: false },
+      { userId: adminUserObj.id, title: 'طلب مرفوض في مراجعة التكاليف', body: 'معدات رفع إضافية لأعمال MEP — PR-2026-007', type: 'WARNING', entityType: 'purchase_request', isRead: true },
+      { userId: adminUserObj.id, title: 'طلب مرتبط بنشاط محجوب', body: 'توريد حديد تسليح للنشاط المتعثر — PR-2026-008', type: 'INFO', entityType: 'purchase_request', isRead: true },
     ] : []),
     ...(rashedUser ? [
-      { userId: rashedUser.id, title: 'تمت الموافقة على طلب الشراء', body: 'حجز مضخة خرسانة وهزازات — PR-2026-002', type: 'SUCCESS', entityType: 'purchase_request', isRead: false },
-      { userId: rashedUser.id, title: 'تم رفض طلب الشراء', body: 'عوازل رطوبة للأساسات — لمراجعة المواصفة', type: 'WARNING', entityType: 'purchase_request', isRead: false },
+      { userId: rashedUser.id, title: 'تمت مراجعة المشتريات والطلب لدى التكاليف', body: 'معدات رفع وسقالة محيطية للواجهة الشرقية — PR-2026-002', type: 'INFO', entityType: 'purchase_request', isRead: false },
+      { userId: rashedUser.id, title: 'اعتماد مطلوب لطلب جديد بالمشروع', body: 'كابلات كهرباء وصواني لمسارات MEP — PR-2026-003', type: 'INFO', entityType: 'purchase_request', isRead: true },
     ] : []),
     ...(nouraUser ? [
-      { userId: nouraUser.id, title: 'طلب شراء جديد يحتاج مراجعة', body: 'توريد خرسانة جاهزة للقواعد — PR-2026-001', type: 'INFO', entityType: 'purchase_request', isRead: false },
-      { userId: nouraUser.id, title: 'طلب شراء جديد', body: 'مواسير HDPE لتمديدات الصرف الأرضي — PR-2026-006', type: 'INFO', entityType: 'purchase_request', isRead: true },
+      { userId: nouraUser.id, title: 'طلب شراء جديد يحتاج مراجعة', body: 'توريد حديد تسليح للقواعد والأعمدة — PR-2026-001', type: 'INFO', entityType: 'purchase_request', isRead: false },
+      { userId: nouraUser.id, title: 'طلب عاجل بانتظار مراجعة المشتريات', body: 'خرسانة جاهزة عاجلة لصب الميدات — PR-2026-009', type: 'INFO', entityType: 'purchase_request', isRead: true },
     ] : []),
   ];
 
@@ -2067,6 +2593,28 @@ async function main() {
       createdById: demoUsers.rashed.id,
       relatedCodes: ['ACT-002', 'ACT-004'],
     },
+    {
+      projectId: projects.servicesHub.id,
+      date: '2026-04-24',
+      summary: 'تقدم جيد في القواعد مع ظهور أثر مباشر لتعديل مسارات الخدمات على التكلفة.',
+      completedWork: 'استكمال جزء كبير من قواعد غرف الخدمات ومراجعة مخطط تحويل الكابلات والخطوط الصحية مع الاستشاري.',
+      workedActivitiesSummary: 'ACT-003, ACT-004',
+      blockers: 'لا توجد عوائق توريد، لكن التعديلات التصميمية تستهلك وقتاً وتكلفة إضافية.',
+      tomorrowPlan: 'إقفال المسارات النهائية والبدء في تثبيت الحوامل الرئيسية.',
+      createdById: demoUsers.sara.id,
+      relatedCodes: ['ACT-003', 'ACT-004'],
+    },
+    {
+      projectId: projects.servicesHub.id,
+      date: '2026-04-25',
+      summary: 'متابعة تنفيذ التحويلات والتهيئة لسطح الخدمات مع رفع تنبيه مالي على أعمال MEP.',
+      completedWork: 'تثبيت مسارات رئيسية جديدة داخل غرف الخدمات وتجهيز نقاط المعدات الميكانيكية على السطح.',
+      workedActivitiesSummary: 'ACT-004, ACT-005',
+      blockers: 'اعتماد الاستشاري لبعض التفاصيل النهائية مطلوب قبل إقفال كامل الأعمال.',
+      tomorrowPlan: 'استكمال الحوامل الميكانيكية ومراجعة أمر التغيير مع قسم التكلفة.',
+      createdById: demoUsers.mariam.id,
+      relatedCodes: ['ACT-004', 'ACT-005'],
+    },
   ];
 
   for (const log of dailyLogs) {
@@ -2105,6 +2653,14 @@ async function main() {
   });
   const ciLabsCivil = await prisma.costItem.findUnique({
     where: { projectId_code: { projectId: projects.labs.id, code: 'COST-001' } },
+    select: { id: true },
+  });
+  const ciServicesCivil = await prisma.costItem.findUnique({
+    where: { projectId_code: { projectId: projects.servicesHub.id, code: 'COST-001' } },
+    select: { id: true },
+  });
+  const ciServicesMep = await prisma.costItem.findUnique({
+    where: { projectId_code: { projectId: projects.servicesHub.id, code: 'COST-002' } },
     select: { id: true },
   });
 
@@ -2207,6 +2763,48 @@ async function main() {
       currency: 'SAR',
       status: InvoiceStatus.PAID,
       createdById: demoUsers.noura.id,
+    },
+    {
+      projectId: projects.servicesHub.id,
+      invoiceNumber: 'INV-001',
+      date: d('2026-04-18'),
+      vendor: 'مؤسسة الخليج للخرسانة والبلوك',
+      costItemId: ciServicesCivil?.id,
+      description: 'أعمال خرسانة وقواعد غرف الخدمات - الدفعة الأولى',
+      amountBeforeTax: 1480000,
+      taxAmount: 222000,
+      grossAmount: 1702000,
+      currency: 'SAR',
+      status: InvoiceStatus.PAID,
+      createdById: demoUsers.ali.id,
+    },
+    {
+      projectId: projects.servicesHub.id,
+      invoiceNumber: 'INV-002',
+      date: d('2026-04-27'),
+      vendor: 'شركة الحلول الكهروميكانيكية',
+      costItemId: ciServicesMep?.id,
+      description: 'توريد وتنفيذ أعمال MEP الرئيسية داخل غرف الخدمات',
+      amountBeforeTax: 980000,
+      taxAmount: 147000,
+      grossAmount: 1127000,
+      currency: 'SAR',
+      status: InvoiceStatus.APPROVED,
+      createdById: demoUsers.sara.id,
+    },
+    {
+      projectId: projects.servicesHub.id,
+      invoiceNumber: 'INV-003',
+      date: d('2026-05-04'),
+      vendor: 'شركة الحلول الكهروميكانيكية',
+      costItemId: ciServicesMep?.id,
+      description: 'تحويلات إضافية لمسارات MEP وأعمال إعادة توزيع',
+      amountBeforeTax: 910000,
+      taxAmount: 136500,
+      grossAmount: 1046500,
+      currency: 'SAR',
+      status: InvoiceStatus.SUBMITTED,
+      createdById: demoUsers.yousef.id,
     },
     {
       projectId: projects.maintenance.id,
@@ -2317,6 +2915,30 @@ async function main() {
       currency: 'SAR',
       status: ExtractStatus.DRAFT,
       createdById: demoUsers.sara.id,
+    },
+    {
+      projectId: projects.servicesHub.id,
+      extractNumber: 'EXT-001',
+      date: d('2026-04-22'),
+      description: 'المستخلص الأول - غرف الخدمات والأعمال المدنية',
+      amountBeforeTax: 1260000,
+      taxAmount: 189000,
+      totalAmount: 1449000,
+      currency: 'SAR',
+      status: ExtractStatus.PAID,
+      createdById: demoUsers.sara.id,
+    },
+    {
+      projectId: projects.servicesHub.id,
+      extractNumber: 'EXT-002',
+      date: d('2026-05-05'),
+      description: 'المستخلص الثاني - تحويلات MEP والأعمال الإضافية',
+      amountBeforeTax: 1180000,
+      taxAmount: 177000,
+      totalAmount: 1357000,
+      currency: 'SAR',
+      status: ExtractStatus.APPROVED,
+      createdById: demoUsers.yousef.id,
     },
     {
       projectId: projects.maintenance.id,

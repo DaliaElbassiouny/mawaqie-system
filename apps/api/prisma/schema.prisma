@@ -32,6 +32,7 @@ model User {
   createdDailyLogs               DailyLog[]          @relation("DailyLogCreator")
   requestedPurchaseRequests      PurchaseRequest[]   @relation("PurchaseRequestRequester")
   approvedPurchaseRequests       PurchaseRequest[]   @relation("PurchaseRequestApprover")
+  prApprovalSteps                PurchaseRequestApprovalStep[] @relation("ApprovalStepActor")
   createdOperationSchedules      OperationSchedule[] @relation("OperationScheduleCreator")
   createdInvoices                Invoice[]           @relation("InvoiceCreator")
   createdExtracts                Extract[]           @relation("ExtractCreator")
@@ -235,7 +236,7 @@ model CostItem {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PURCHASE REQUESTS (foundation — business logic in later phases)
+// PURCHASE REQUESTS — sequential multi-stage approval workflow
 // ─────────────────────────────────────────────────────────────────────────────
 
 model PurchaseRequest {
@@ -249,6 +250,7 @@ model PurchaseRequest {
   requirementType String            @default("OTHER")  // MATERIALS | EQUIPMENT | SERVICES | OTHER
   priority        LookaheadPriority @default(MEDIUM)
   status          PRStatus          @default(DRAFT)
+  currentStage    PRApprovalStage   @default(DRAFT)
   currency        String            @default("SAR")
   quantity        Decimal?          @db.Decimal(18, 4)
   unit            String?
@@ -265,16 +267,65 @@ model PurchaseRequest {
   requestedAt DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  project    Project            @relation(fields: [projectId], references: [id])
-  activity   OperationActivity? @relation("ActivityPurchaseRequests", fields: [activityId], references: [id], onDelete: SetNull)
-  requester  User?              @relation("PurchaseRequestRequester", fields: [requestedById], references: [id], onDelete: SetNull)
-  approvedBy User?              @relation("PurchaseRequestApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  project       Project                      @relation(fields: [projectId], references: [id])
+  activity      OperationActivity?           @relation("ActivityPurchaseRequests", fields: [activityId], references: [id], onDelete: SetNull)
+  requester     User?                        @relation("PurchaseRequestRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  approvedBy    User?                        @relation("PurchaseRequestApprover", fields: [approvedById], references: [id], onDelete: SetNull)
+  approvalSteps PurchaseRequestApprovalStep[]
+  items         PurchaseRequestItem[]
 
   @@index([projectId])
   @@index([requestedById])
   @@index([status])
+  @@index([currentStage])
   @@index([priority])
   @@map("purchase_requests")
+}
+
+model PurchaseRequestApprovalStep {
+  id        String              @id @default(cuid())
+  prId      String
+  stage     PRApprovalStage
+  status    ApprovalStepStatus  @default(PENDING)
+  actorId   String?
+  note      String?
+  decidedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  pr    PurchaseRequest @relation(fields: [prId], references: [id], onDelete: Cascade)
+  actor User?           @relation("ApprovalStepActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@unique([prId, stage])
+  @@index([prId])
+  @@index([stage])
+  @@map("pr_approval_steps")
+}
+
+model PurchaseRequestItem {
+  id               String   @id @default(cuid())
+  prId             String
+  lineNumber       Int
+  titleAr          String
+  titleEn          String?
+  description      String?
+  quantity         Decimal? @db.Decimal(18, 4)
+  unit             String?
+  unitPrice        Decimal? @db.Decimal(18, 4)
+  estimatedTotal   Decimal? @db.Decimal(18, 4)
+  approvedQuantity Decimal? @db.Decimal(18, 4)
+  approvedUnitPrice Decimal? @db.Decimal(18, 4)
+  approvedTotal    Decimal? @db.Decimal(18, 4)
+  notes            String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pr PurchaseRequest @relation(fields: [prId], references: [id], onDelete: Cascade)
+
+  @@unique([prId, lineNumber])
+  @@index([prId])
+  @@map("pr_items")
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -519,6 +570,22 @@ enum PRStatus {
   FULFILLED
   RECEIVED
   ORDERED
+}
+
+enum PRApprovalStage {
+  DRAFT
+  PROCUREMENT_REVIEW
+  COST_REVIEW
+  PM_REVIEW
+  FINAL_REVIEW
+  COMPLETED
+  REJECTED
+}
+
+enum ApprovalStepStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 enum ImportStatus {

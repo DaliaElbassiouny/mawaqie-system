@@ -249,7 +249,28 @@ export const procurementApi = {
   create: (data: unknown) => api.post('/procurement/requests', data),
   update: (id: string, data: unknown) => api.patch(`/procurement/requests/${id}`, data),
   delete: (id: string) => api.delete(`/procurement/requests/${id}`),
+  submit: (id: string, data?: { note?: string }) => api.post(`/procurement/requests/${id}/submit`, data ?? {}),
+  approveStage: (id: string, data?: { note?: string }) => api.post(`/procurement/requests/${id}/approve`, data ?? {}),
+  rejectStage: (id: string, data?: { note?: string }) => api.post(`/procurement/requests/${id}/reject`, data ?? {}),
 };
+
+export function getApiErrorMessage(error: unknown, fallback: string) {
+  if (axios.isAxiosError(error)) {
+    const responseData = error.response?.data as
+      | { message?: string; errors?: unknown }
+      | undefined;
+
+    if (typeof responseData?.message === 'string' && responseData.message.trim().length > 0) {
+      return responseData.message;
+    }
+  }
+
+  if (error instanceof Error && error.message.trim().length > 0) {
+    return error.message;
+  }
+
+  return fallback;
+}
 
 export const documentsApi = {
   list: (params?: Record<string, unknown>) => api.get('/documents', { params }),
