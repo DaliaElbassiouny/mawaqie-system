@@ -6,6 +6,7 @@
     "build": "nest build",
     "dev": "nest start --watch",
     "start": "node dist/main",
+    "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "prisma:generate": "node -e \"delete process.env.PRISMA_GENERATE_DATAPROXY; delete process.env.PRISMA_GENERATE_ACCELERATE; delete process.env.PRISMA_GENERATE_NO_ENGINE; const { spawnSync } = require('node:child_process'); const cmd = process.platform === 'win32' ? 'prisma.cmd' : 'prisma'; const result = spawnSync(cmd, ['generate'], { stdio: 'inherit', shell: true, env: process.env }); process.exit(result.status ?? 1);\"",
     "prisma:migrate": "prisma migrate dev",
