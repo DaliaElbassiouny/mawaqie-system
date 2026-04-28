@@ -6,7 +6,7 @@
  *    or:  pnpm db:reset-admin          (from monorepo root)
  */
 import { PrismaClient } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 
 const DEV_EMAIL = 'admin@cdc-system.local';
 const DEV_PASSWORD = 'Admin@123456';

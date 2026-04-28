@@ -3,7 +3,7 @@ import {
   NotFoundException,
   ConflictException,
 } from '@nestjs/common';
-import * as bcrypt from 'bcrypt';
+import * as bcrypt from 'bcryptjs';
 import { Prisma } from '@prisma/client';
 import { AuthUser } from '@cdc/shared';
 import { sanitizePage, sanitizeLimit } from '../common/utils/query.util';
