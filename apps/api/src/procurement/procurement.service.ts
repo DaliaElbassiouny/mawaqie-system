@@ -456,7 +456,6 @@ export class ProcurementService {
       ...(dto.description !== undefined && { description: dto.description }),
       ...(dto.requirementType && { requirementType: dto.requirementType }),
       ...(dto.priority && { priority: dto.priority as any }),
-      ...(dto.status && { status: dto.status }),
       ...(dto.unit !== undefined && { unit: dto.unit }),
       ...(dto.quantity != null && { quantity: this.toDecimal(dto.quantity) }),
       ...(dto.totalAmount != null && { totalAmount: this.toDecimal(dto.totalAmount) }),
@@ -469,11 +468,6 @@ export class ProcurementService {
         activity: dto.activityId ? { connect: { id: dto.activityId } } : { disconnect: true },
       }),
     };
-
-    if (dto.status === 'APPROVED' && existing.status !== 'APPROVED') {
-      updateData.approvedBy = { connect: { id: caller.id } };
-      updateData.approvedAt = new Date();
-    }
 
     const updated = await this.prisma.purchaseRequest.update({
       where: { id },
@@ -489,29 +483,6 @@ export class ProcurementService {
       entityId: id,
       newData: updated as unknown as Record<string, unknown>,
     });
-
-    if (dto.status && existing.requestedById && dto.status !== existing.status) {
-      const statusLabels: Record<string, string> = {
-        APPROVED: 'تمت الموافقة على طلب الشراء',
-        REJECTED: 'تم رفض طلب الشراء',
-        UNDER_REVIEW: 'طلب الشراء قيد المراجعة',
-        FULFILLED: 'تم تنفيذ طلب الشراء',
-        RECEIVED: 'تم استلام مواد طلب الشراء',
-      };
-      const title = statusLabels[dto.status];
-      if (title && existing.requestedById !== caller.id) {
-        await this.notifications.create({
-          userId: existing.requestedById,
-          title,
-          body: updated.nameAr,
-          type: dto.status === 'APPROVED' || dto.status === 'FULFILLED' ? 'SUCCESS'
-               : dto.status === 'REJECTED' ? 'WARNING' : 'INFO',
-          entityType: 'purchase_request',
-          entityId: id,
-          route: `/procurement`,
-        });
-      }
-    }
 
     return updated;
   }
@@ -590,6 +561,10 @@ export class ProcurementService {
     const callerRoles: string[] = caller.roles ?? [];
     if (!callerRoles.some((role) => allowedRoles.includes(role))) {
       throw new ForbiddenException('لا تملك الصلاحية لاعتماد هذه المرحلة');
+    }
+
+    if (caller.id === pr.requestedById) {
+      throw new ForbiddenException('لا يمكنك اعتماد طلب الشراء الخاص بك');
     }
 
     const transition = STAGE_TRANSITIONS[pr.currentStage];

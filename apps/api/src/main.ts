@@ -40,21 +40,25 @@ async function bootstrap() {
     }),
   );
 
-  // ── Swagger ─────────────────────────────────────────────────────────────────
-  const config = new DocumentBuilder()
-    .setTitle('CDC System API')
-    .setDescription('نظام التحكم بالتكاليف — Cost & Document Control System')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  // ── Swagger (dev/staging only — not exposed in production) ──────────────────
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('CDC System API')
+      .setDescription('نظام التحكم بالتكاليف — Cost & Document Control System')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
 
   logger.log(`API running on http://localhost:${port}/api/v1`);
-  logger.log(`Swagger docs: http://localhost:${port}/api/docs`);
+  if (process.env.NODE_ENV !== 'production') {
+    logger.log(`Swagger docs: http://localhost:${port}/api/docs`);
+  }
 }
 
 bootstrap();

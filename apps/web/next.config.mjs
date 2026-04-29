@@ -6,7 +6,7 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/config.ts');
 const nextConfig = {
   transpilePackages: ['@cdc/shared'],
   experimental: {
-    serverActions: { allowedOrigins: ['localhost:3000', 'localhost:3006'] },
+    serverActions: { allowedOrigins: ['localhost:3000', 'localhost:3003', 'localhost:3006'] },
   },
 };
 

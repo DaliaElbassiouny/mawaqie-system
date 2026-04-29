@@ -4,6 +4,7 @@ import {
   IsBoolean,
   IsDateString,
   IsEnum,
+  IsNotEmpty,
   IsNumber,
   IsOptional,
   IsPositive,
@@ -79,7 +80,6 @@ export class UpdatePurchaseRequestDto {
   @ApiPropertyOptional() @IsOptional() @IsString() description?: string;
   @ApiPropertyOptional({ enum: PR_REQUIREMENT_TYPES }) @IsOptional() @IsEnum(PR_REQUIREMENT_TYPES) requirementType?: string;
   @ApiPropertyOptional({ enum: PR_PRIORITIES }) @IsOptional() @IsEnum(PR_PRIORITIES) priority?: string;
-  @ApiPropertyOptional({ enum: PR_STATUSES }) @IsOptional() @IsEnum(PR_STATUSES) status?: PRStatusValue;
   @ApiPropertyOptional() @IsOptional() @IsString() unit?: string;
   @ApiPropertyOptional() @IsOptional() @Type(() => Number) @IsNumber() quantity?: number;
   @ApiPropertyOptional() @IsOptional() @Type(() => Number) @IsNumber() totalAmount?: number;
@@ -110,6 +110,10 @@ export class SubmitPRDto {
 
 export class ApproveRejectPRDto {
   @ApiPropertyOptional() @IsOptional() @IsString() note?: string;
+}
+
+export class RejectPRDto {
+  @ApiProperty() @IsString() @IsNotEmpty() note: string;
 }
 
 export { PRApprovalStage };

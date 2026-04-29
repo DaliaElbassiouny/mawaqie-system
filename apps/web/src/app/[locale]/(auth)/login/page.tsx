@@ -219,14 +219,16 @@ export default function LoginPage() {
                 </Button>
               </form>
 
-              {/* Dev credentials hint */}
-              <div className="mt-5 p-3 bg-surface-hover rounded-lg border border-surface-border">
-                <p className="text-[11px] text-text-muted text-center leading-relaxed">
-                  Demo: <span className="font-mono text-text-secondary">admin@cdc-system.local</span>
-                  {' / '}
-                  <span className="font-mono text-text-secondary">Admin@123456</span>
-                </p>
-              </div>
+              {/* Dev credentials hint — stripped from production builds */}
+              {process.env.NODE_ENV !== 'production' && (
+                <div className="mt-5 p-3 bg-surface-hover rounded-lg border border-surface-border">
+                  <p className="text-[11px] text-text-muted text-center leading-relaxed">
+                    Demo: <span className="font-mono text-text-secondary">admin@cdc-system.local</span>
+                    {' / '}
+                    <span className="font-mono text-text-secondary">Admin@123456</span>
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 

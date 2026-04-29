@@ -21,6 +21,7 @@ import {
   ApproveRejectPRDto,
   CreatePurchaseRequestDto,
   ListPurchaseRequestsQueryDto,
+  RejectPRDto,
   SubmitPRDto,
   UpdatePurchaseRequestDto,
 } from './dto/procurement.dto';
@@ -68,7 +69,7 @@ export class ProcurementController {
 
   @Patch('requests/:id')
   @RequirePermissions(PERMISSIONS.PROCUREMENT_UPDATE)
-  @ApiOperation({ summary: 'Update a purchase request (including status)' })
+  @ApiOperation({ summary: 'Update editable fields of a purchase request' })
   updateRequest(
     @Param('id') id: string,
     @Body() dto: UpdatePurchaseRequestDto,
@@ -108,10 +109,10 @@ export class ProcurementController {
 
   @Post('requests/:id/reject')
   @RequirePermissions(PERMISSIONS.PROCUREMENT_APPROVE)
-  @ApiOperation({ summary: 'Reject current approval stage of a purchase request' })
+  @ApiOperation({ summary: 'Reject current approval stage of a purchase request (note required)' })
   rejectStage(
     @Param('id') id: string,
-    @Body() dto: ApproveRejectPRDto,
+    @Body() dto: RejectPRDto,
     @CurrentUser() caller: AuthUser,
   ) {
     return this.service.rejectStage(id, dto, caller);
