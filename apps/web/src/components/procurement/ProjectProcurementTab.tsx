@@ -43,7 +43,7 @@ const FILTER_STATUSES: RequirementReadinessStatus[] = [
 
 const STATUS_AR: Record<RequirementReadinessStatus, string> = {
   PENDING: 'يحتاج طلب شراء',
-  REQUESTED: 'تم تحويله لطلب شراء',
+  REQUESTED: 'يحتاج طلب شراء',
   PARTIALLY_AVAILABLE: 'متوفر جزئيًا',
   AVAILABLE: 'متاح',
   BLOCKED: 'يحتاج طلب شراء',
@@ -113,6 +113,7 @@ function RequirementRow({
     !hasLinkedPR &&
     (requirement.status === 'PENDING' ||
       requirement.status === 'BLOCKED' ||
+      requirement.status === 'REQUESTED' ||
       requirement.status === 'PARTIALLY_AVAILABLE');
 
   const convertLabel =
@@ -160,6 +161,11 @@ function RequirementRow({
       {/* AVAILABLE with no linked PR */}
       {!hasLinkedPR && requirement.status === 'AVAILABLE' && (
         <p className="text-xs text-text-muted">لا يحتاج طلب شراء</p>
+      )}
+
+      {/* REQUESTED without linked PR — stale/orphaned state warning */}
+      {!hasLinkedPR && requirement.status === 'REQUESTED' && (
+        <p className="text-xs text-amber-400">لم يتم العثور على طلب شراء مرتبط. يمكنك إنشاء طلب جديد.</p>
       )}
 
       {/* Convert button */}
