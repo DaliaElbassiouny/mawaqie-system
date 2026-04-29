@@ -8,6 +8,7 @@ import { Topbar } from './Topbar';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { FeatureGuide } from '@/components/guide/FeatureGuide';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -55,6 +56,8 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           </div>
         </main>
       </div>
+
+      <FeatureGuide />
     </div>
   );
 }

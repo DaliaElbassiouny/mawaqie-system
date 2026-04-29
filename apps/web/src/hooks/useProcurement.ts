@@ -98,6 +98,17 @@ export function useRejectPRStage() {
   });
 }
 
+export function useMarkPRDelivery() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'FULFILLED' | 'RECEIVED' | 'COMPLETED' }) =>
+      procurementApi.markDelivery(id, status),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['procurement'] });
+    },
+  });
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export type PRStatus =
@@ -111,7 +122,8 @@ export type PRStatus =
   | 'PARTIALLY_FULFILLED'
   | 'FULFILLED'
   | 'RECEIVED'
-  | 'ORDERED';
+  | 'ORDERED'
+  | 'COMPLETED';
 
 export type PRApprovalStage =
   | 'DRAFT'

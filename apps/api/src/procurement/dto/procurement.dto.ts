@@ -26,6 +26,7 @@ export const PR_STATUSES = [
   'PARTIALLY_FULFILLED',
   'FULFILLED',
   'RECEIVED',
+  'COMPLETED',
 ] as const;
 
 export const PR_REQUIREMENT_TYPES = ['MATERIALS', 'EQUIPMENT', 'SERVICES', 'OTHER'] as const;
@@ -114,6 +115,15 @@ export class ApproveRejectPRDto {
 
 export class RejectPRDto {
   @ApiProperty() @IsString() @IsNotEmpty() note: string;
+}
+
+export const DELIVERY_STATUSES = ['FULFILLED', 'RECEIVED', 'COMPLETED'] as const;
+export type DeliveryStatusValue = (typeof DELIVERY_STATUSES)[number];
+
+export class MarkDeliveryDto {
+  @ApiProperty({ enum: DELIVERY_STATUSES })
+  @IsEnum(DELIVERY_STATUSES)
+  status: DeliveryStatusValue;
 }
 
 export { PRApprovalStage };

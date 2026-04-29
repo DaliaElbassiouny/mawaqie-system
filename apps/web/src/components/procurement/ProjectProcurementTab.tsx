@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { PackageCheck } from 'lucide-react';
+import { PackageCheck, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,12 +10,13 @@ import { useAuthStore } from '@/store/auth.store';
 import { formatCompactNumber, formatCurrency, formatNumber, formatText } from '@/lib/utils';
 import {
   useProcurementReadiness,
-  useUpdateProcurementRequirement,
   type ActivityRecord,
+  type LinkedPRSummary,
   type ProcurementReadinessFilters,
   type ProcurementRequirementType,
   type RequirementReadinessStatus,
 } from '@/hooks/useOperations';
+import { ConvertToPRModal } from './ConvertToPRModal';
 
 const PAGE_SIZE = 10;
 
@@ -31,13 +32,21 @@ const REQUIREMENT_VARIANT: Record<
 };
 
 const REQUIREMENT_TYPES: ProcurementRequirementType[] = ['MATERIALS', 'EQUIPMENT'];
-const REQUIREMENT_STATUSES: RequirementReadinessStatus[] = [
+const FILTER_STATUSES: RequirementReadinessStatus[] = [
   'PENDING',
   'REQUESTED',
   'PARTIALLY_AVAILABLE',
   'AVAILABLE',
   'BLOCKED',
 ];
+
+const STATUS_AR: Record<RequirementReadinessStatus, string> = {
+  PENDING: 'يحتاج طلب شراء',
+  REQUESTED: 'تم تحويله لطلب شراء',
+  PARTIALLY_AVAILABLE: 'متوفر جزئيًا',
+  AVAILABLE: 'متاح',
+  BLOCKED: 'محجوب',
+};
 
 function StatCard({
   label,
@@ -58,60 +67,90 @@ function StatCard({
   );
 }
 
+interface ConvertTarget {
+  activity: ActivityRecord;
+  requirementType: ProcurementRequirementType;
+  requirementValue: string;
+}
+
 function RequirementRow({
   projectId,
   activity,
   requirementType,
-  canUpdate,
+  linkedPRs,
+  canCreate,
+  onConvert,
 }: {
   projectId: string;
   activity: ActivityRecord;
   requirementType: ProcurementRequirementType;
-  canUpdate: boolean;
+  linkedPRs: LinkedPRSummary[];
+  canCreate: boolean;
+  onConvert: (target: ConvertTarget) => void;
 }) {
   const to = useTranslations('operations');
-  const mutation = useUpdateProcurementRequirement(projectId);
   const requirement = activity.requirements.find(
     (item) => item.procurementLinked && item.type === requirementType,
   );
 
   if (!requirement) return null;
 
+  const typeLinkedPRs = linkedPRs.filter(
+    (pr) => !pr.requirementType || pr.requirementType === requirementType,
+  );
+  const hasLinkedPR = typeLinkedPRs.length > 0;
+
+  const canConvert =
+    canCreate &&
+    !hasLinkedPR &&
+    (requirement.status === 'PENDING' || requirement.status === 'BLOCKED');
+
   return (
     <div className="rounded-lg border border-surface-border bg-surface-card p-3 space-y-3">
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="muted">{to(`requirementTypes.${requirement.type}`)}</Badge>
             <Badge variant={REQUIREMENT_VARIANT[requirement.status]}>
-              {to(`requirementStatuses.${requirement.status}`)}
+              {STATUS_AR[requirement.status]}
             </Badge>
           </div>
           <p className="mt-2 text-sm font-medium text-text-primary">{formatText(requirement.value)}</p>
-          {requirement.notes && (
+          {requirement.notes && !hasLinkedPR && (
             <p className="mt-1 text-xs text-text-muted whitespace-pre-wrap">{formatText(requirement.notes)}</p>
           )}
+
+          {hasLinkedPR && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {typeLinkedPRs.map((pr) => (
+                <span
+                  key={pr.id}
+                  className="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 text-xs font-mono text-brand"
+                >
+                  {pr.prNumber}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
-        {canUpdate && (
-          <select
-            value={requirement.status}
-            onChange={(event) =>
-              mutation.mutate({
-                activityId: activity.id,
+
+        {canConvert && (
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            className="shrink-0 gap-1.5 text-xs"
+            onClick={() =>
+              onConvert({
+                activity,
                 requirementType,
-                status: event.target.value as RequirementReadinessStatus,
-                notes: requirement.notes ?? undefined,
+                requirementValue: requirement.value,
               })
             }
-            className="field-select min-w-[180px]"
-            disabled={mutation.isPending}
           >
-            {REQUIREMENT_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {to(`requirementStatuses.${status}`)}
-              </option>
-            ))}
-          </select>
+            <PlusCircle className="h-3.5 w-3.5" />
+            تحويل إلى طلب شراء
+          </Button>
         )}
       </div>
     </div>
@@ -121,14 +160,17 @@ function RequirementRow({
 function ActivityCard({
   projectId,
   activity,
-  canUpdate,
+  canCreate,
+  onConvert,
 }: {
   projectId: string;
   activity: ActivityRecord;
-  canUpdate: boolean;
+  canCreate: boolean;
+  onConvert: (target: ConvertTarget) => void;
 }) {
   const t = useTranslations('procurement');
   const to = useTranslations('operations');
+  const linkedPRs = activity.linkedPRs ?? [];
 
   return (
     <div className="rounded-xl border border-surface-border bg-surface-card p-4 space-y-4">
@@ -137,9 +179,7 @@ function ActivityCard({
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-mono text-text-muted">{activity.code}</span>
             <Badge variant={REQUIREMENT_VARIANT[activity.procurementReadinessStatus ?? 'PENDING']}>
-              {to(
-                `requirementStatuses.${activity.procurementReadinessStatus ?? 'PENDING'}`,
-              )}
+              {STATUS_AR[activity.procurementReadinessStatus ?? 'PENDING']}
             </Badge>
             {activity.procurementBlocked && (
               <Badge variant="danger">{to('procurementBlocked')}</Badge>
@@ -152,7 +192,11 @@ function ActivityCard({
         </div>
         <div className="text-end text-xs text-text-muted">
           <p>{to(`statuses.${activity.status}`)}</p>
-          <p className="mt-1">{activity.responsibleUser?.nameAr ? formatText(activity.responsibleUser.nameAr) : to('unassigned')}</p>
+          <p className="mt-1">
+            {activity.responsibleUser?.nameAr
+              ? formatText(activity.responsibleUser.nameAr)
+              : to('unassigned')}
+          </p>
         </div>
       </div>
 
@@ -163,7 +207,9 @@ function ActivityCard({
             projectId={projectId}
             activity={activity}
             requirementType={type}
-            canUpdate={canUpdate}
+            linkedPRs={linkedPRs}
+            canCreate={canCreate}
+            onConvert={onConvert}
           />
         ))}
       </div>
@@ -187,7 +233,9 @@ function ActivityCard({
       {activity.procurementBlockedItems.length > 0 && (
         <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
           <p className="font-medium">{t('blockedHint')}</p>
-          <p className="mt-1">{activity.procurementBlockedItems.map((item) => formatText(item)).join(' | ')}</p>
+          <p className="mt-1">
+            {activity.procurementBlockedItems.map((item) => formatText(item)).join(' | ')}
+          </p>
         </div>
       )}
     </div>
@@ -204,13 +252,15 @@ export function ProjectProcurementTab({ projectId }: ProjectProcurementTabProps)
   const tc = useTranslations('common');
   const { hasPermission } = useAuthStore();
   const canView = hasPermission('procurement:view');
-  const canUpdate = hasPermission('procurement:update');
+  const canCreate = hasPermission('procurement:create');
 
   const [page, setPage] = useState(1);
   const [filters, setFilters] = useState<ProcurementReadinessFilters>({
     page: 1,
     limit: PAGE_SIZE,
   });
+  const [convertTarget, setConvertTarget] = useState<ConvertTarget | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const query: ProcurementReadinessFilters = {
     ...filters,
@@ -218,10 +268,17 @@ export function ProjectProcurementTab({ projectId }: ProjectProcurementTabProps)
     limit: PAGE_SIZE,
   };
 
-  const { data, isLoading, isError } = useProcurementReadiness(
+  const { data, isLoading, isError, refetch } = useProcurementReadiness(
     canView ? projectId : null,
     query,
   );
+
+  const handleConvertSuccess = async (prNumber: string) => {
+    setConvertTarget(null);
+    setSuccessMessage(`تم إنشاء طلب الشراء ${prNumber} بنجاح.`);
+    await refetch();
+    setTimeout(() => setSuccessMessage(null), 4000);
+  };
 
   if (!canView) {
     return (
@@ -233,6 +290,17 @@ export function ProjectProcurementTab({ projectId }: ProjectProcurementTabProps)
 
   return (
     <div className="space-y-5">
+      {convertTarget && (
+        <ConvertToPRModal
+          projectId={projectId}
+          activity={convertTarget.activity}
+          requirementType={convertTarget.requirementType}
+          requirementValue={convertTarget.requirementValue}
+          onClose={() => setConvertTarget(null)}
+          onSuccess={(prNumber) => void handleConvertSuccess(prNumber)}
+        />
+      )}
+
       <div className="flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-text-muted">
@@ -243,6 +311,12 @@ export function ProjectProcurementTab({ projectId }: ProjectProcurementTabProps)
           <p className="page-header-subtitle">{t('hint')}</p>
         </div>
       </div>
+
+      {successMessage && (
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400">
+          {successMessage}
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
         <StatCard label={t('stats.totalNeeds')} value={data?.summary.totalNeeds ?? 0} />
@@ -298,9 +372,9 @@ export function ProjectProcurementTab({ projectId }: ProjectProcurementTabProps)
             className="field-select"
           >
             <option value="">{t('allStatuses')}</option>
-            {REQUIREMENT_STATUSES.map((status) => (
+            {FILTER_STATUSES.map((status) => (
               <option key={status} value={status}>
-                {to(`requirementStatuses.${status}`)}
+                {STATUS_AR[status]}
               </option>
             ))}
           </select>
@@ -349,14 +423,16 @@ export function ProjectProcurementTab({ projectId }: ProjectProcurementTabProps)
                 key={activity.id}
                 projectId={projectId}
                 activity={activity}
-                canUpdate={canUpdate}
+                canCreate={canCreate}
+                onConvert={(target) => setConvertTarget(target)}
               />
             ))}
           </div>
 
           <div className="flex items-center justify-between gap-3 rounded-xl border border-surface-border bg-surface-card px-4 py-3">
             <p className="text-xs text-text-muted">
-              {tc('page')} {formatNumber(data?.page ?? 1)} {tc('of')} {formatNumber(data?.totalPages ?? 1)}
+              {tc('page')} {formatNumber(data?.page ?? 1)} {tc('of')}{' '}
+              {formatNumber(data?.totalPages ?? 1)}
             </p>
             <div className="flex items-center gap-2">
               <Button

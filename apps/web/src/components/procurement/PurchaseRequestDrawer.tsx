@@ -24,6 +24,7 @@ import { cn, formatDateWithEnglishDigits, formatNumber } from '@/lib/utils';
 import {
   useApprovePRStage,
   useCreatePurchaseRequest,
+  useMarkPRDelivery,
   usePurchaseRequest,
   useRejectPRStage,
   useSubmitPurchaseRequest,
@@ -58,6 +59,7 @@ const STATUS_CONFIG: Record<
   FULFILLED: { ar: 'منفذ', en: 'Fulfilled', variant: 'success' },
   RECEIVED: { ar: 'مستلم', en: 'Received', variant: 'success' },
   ORDERED: { ar: 'مطلوب', en: 'Ordered', variant: 'info' },
+  COMPLETED: { ar: 'مكتمل', en: 'Completed', variant: 'success' },
 };
 
 const PRIORITY_CONFIG: Record<PRPriority, { ar: string; en: string; color: string }> = {
@@ -137,6 +139,7 @@ export function PurchaseRequestDrawer({ mode, request, onClose, onSuccess }: Pro
   const submitMutation = useSubmitPurchaseRequest();
   const approveMutation = useApprovePRStage();
   const rejectMutation = useRejectPRStage();
+  const deliveryMutation = useMarkPRDelivery();
 
   const [activeTab, setActiveTab] = useState<'details' | 'workflow' | 'documents'>('details');
   const [error, setError] = useState('');
@@ -263,23 +266,36 @@ export function PurchaseRequestDrawer({ mode, request, onClose, onSuccess }: Pro
     }
   };
 
-  const handleStatusUpdate = async (status: PRStatus) => {
+  const handleDeliveryUpdate = async (nextStatus: 'FULFILLED' | 'RECEIVED' | 'COMPLETED') => {
     if (!currentRequest) return;
+
+    const successMessages: Record<string, string> = {
+      FULFILLED: isAr ? 'تم تحديث الطلب إلى منفذ' : 'Request marked as fulfilled',
+      RECEIVED:  isAr ? 'تم تحديث الطلب إلى مستلم' : 'Request marked as received',
+      COMPLETED: isAr ? 'تم اكتمال الطلب' : 'Request marked as completed',
+    };
 
     try {
       setError('');
-      await updateMutation.mutateAsync({ id: currentRequest.id, data: { status } });
-      onSuccess?.(
-        status === 'FULFILLED'
-          ? isAr
-            ? 'تم تحديث الطلب إلى منفذ'
-            : 'Request marked as fulfilled'
-          : isAr
-            ? 'تم تحديث الطلب إلى مستلم'
-            : 'Request marked as received',
-      );
-    } catch (err) {
-      setError(getApiErrorMessage(err, isAr ? 'حدث خطأ أثناء تحديث الحالة' : 'An error occurred while updating status'));
+      await deliveryMutation.mutateAsync({ id: currentRequest.id, status: nextStatus });
+      onSuccess?.(successMessages[nextStatus]);
+    } catch (err: unknown) {
+      const httpStatus =
+        typeof err === 'object' && err !== null && 'response' in err
+          ? (err as { response?: { status?: number } }).response?.status
+          : undefined;
+
+      let msg = '';
+      if (httpStatus === 403) {
+        msg = isAr ? 'ليس لديك صلاحية لتحديث حالة هذا الطلب.' : 'You do not have permission to update this request.';
+      } else if (httpStatus === 400) {
+        msg = isAr ? 'لا يمكن تحديث حالة هذا الطلب من المرحلة الحالية.' : 'This status transition is not allowed from the current status.';
+      } else if (httpStatus === 404) {
+        msg = isAr ? 'طلب الشراء غير موجود.' : 'Purchase request not found.';
+      } else {
+        msg = getApiErrorMessage(err, isAr ? 'تعذر تحديث حالة الطلب. حاول مرة أخرى.' : 'Failed to update status. Please try again.');
+      }
+      setError(msg);
     }
   };
 
@@ -674,24 +690,39 @@ export function PurchaseRequestDrawer({ mode, request, onClose, onSuccess }: Pro
                 </div>
               )}
 
-              {canUpdate && currentRequest.status === 'APPROVED' && (
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleStatusUpdate('FULFILLED')}
-                    disabled={updateMutation.isPending}
-                  >
-                    {isAr ? 'تحديث إلى منفذ' : 'Mark Fulfilled'}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleStatusUpdate('RECEIVED')}
-                    disabled={updateMutation.isPending}
-                  >
-                    {isAr ? 'تحديث إلى مستلم' : 'Mark Received'}
-                  </Button>
+              {canUpdate && (() => {
+                const NEXT_DELIVERY: Partial<Record<PRStatus, { status: 'FULFILLED' | 'RECEIVED' | 'COMPLETED'; labelAr: string; labelEn: string }>> = {
+                  APPROVED:  { status: 'FULFILLED',  labelAr: 'تحديث إلى منفذ',   labelEn: 'Mark Fulfilled' },
+                  FULFILLED: { status: 'RECEIVED',   labelAr: 'تحديث إلى مستلم',  labelEn: 'Mark Received' },
+                  RECEIVED:  { status: 'COMPLETED',  labelAr: 'تحديث إلى مكتمل',  labelEn: 'Mark Completed' },
+                };
+                const next = NEXT_DELIVERY[currentRequest.status];
+                if (!next) return null;
+                return (
+                  <div className="rounded-xl border border-surface-border bg-surface-hover/20 p-4">
+                    <p className="mb-3 text-xs font-semibold text-text-secondary">
+                      {isAr ? 'تحديث حالة التوريد' : 'Delivery status update'}
+                    </p>
+                    <Button
+                      size="sm"
+                      onClick={() => void handleDeliveryUpdate(next.status)}
+                      disabled={deliveryMutation.isPending}
+                      className="w-full"
+                    >
+                      {deliveryMutation.isPending
+                        ? isAr ? 'جارٍ التحديث...' : 'Updating...'
+                        : isAr ? next.labelAr : next.labelEn}
+                    </Button>
+                  </div>
+                );
+              })()}
+
+              {currentRequest.status === 'COMPLETED' && (
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-500/5 px-4 py-3">
+                  <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-400" />
+                  <p className="text-sm font-medium text-emerald-400">
+                    {isAr ? 'تم اكتمال هذا الطلب.' : 'This request is completed.'}
+                  </p>
                 </div>
               )}
 

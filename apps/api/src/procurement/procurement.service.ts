@@ -14,6 +14,7 @@ import {
   ApproveRejectPRDto,
   CreatePurchaseRequestDto,
   ListPurchaseRequestsQueryDto,
+  MarkDeliveryDto,
   SubmitPRDto,
   UpdatePurchaseRequestDto,
 } from './dto/procurement.dto';
@@ -724,6 +725,53 @@ export class ProcurementService {
         route: '/procurement',
       });
     }
+
+    return updated;
+  }
+
+  // ─── Delivery status chain (APPROVED → FULFILLED → RECEIVED → COMPLETED) ───
+
+  async markDelivery(id: string, dto: MarkDeliveryDto, caller: AuthUser) {
+    const pr = await this.prisma.purchaseRequest.findUnique({
+      where: { id },
+      select: { id: true, status: true, projectId: true },
+    });
+    if (!pr) throw new NotFoundException('طلب الشراء غير موجود');
+
+    const projectIds = await this.scopedProjectIds(caller);
+    if (projectIds !== 'all' && !projectIds.includes(pr.projectId)) {
+      throw new ForbiddenException('لا تملك صلاحية لتحديث هذا الطلب');
+    }
+
+    const ALLOWED: Partial<Record<string, string>> = {
+      APPROVED: 'FULFILLED',
+      FULFILLED: 'RECEIVED',
+      RECEIVED: 'COMPLETED',
+    };
+
+    if (ALLOWED[pr.status] !== dto.status) {
+      throw new BadRequestException(
+        'لا يمكن تحديث حالة هذا الطلب من المرحلة الحالية',
+      );
+    }
+
+    const updated = await this.prisma.purchaseRequest.update({
+      where: { id },
+      data: {
+        status: dto.status as PRStatus,
+        ...(dto.status === 'RECEIVED' && { actualDeliveryDate: new Date() }),
+      },
+      select: PR_DETAIL_SELECT,
+    });
+
+    await this.audit.log({
+      userId: caller.id,
+      action: 'UPDATE',
+      module: 'procurement',
+      entityType: 'PurchaseRequest',
+      entityId: id,
+      newData: { status: dto.status } as Record<string, unknown>,
+    });
 
     return updated;
   }

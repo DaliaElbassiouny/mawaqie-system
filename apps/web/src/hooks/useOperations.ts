@@ -45,6 +45,13 @@ export interface ActivityRequirementRecord {
   procurementLinked: boolean;
 }
 
+export interface LinkedPRSummary {
+  id: string;
+  prNumber: string;
+  status: string;
+  requirementType: string | null;
+}
+
 export interface ActivityRecord {
   id: string;
   scheduleId: string | null;
@@ -100,6 +107,7 @@ export interface ActivityRecord {
   updatedAt: string;
   responsibleUser: UserSummary | null;
   approvedBy: UserSummary | null;
+  linkedPRs?: LinkedPRSummary[];
 }
 
 export interface ScheduleRecord {

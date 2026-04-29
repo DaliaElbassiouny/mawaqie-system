@@ -3,21 +3,25 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
-import { LogOut, ChevronDown, Globe, User, Sun, Moon } from 'lucide-react';
+import { LogOut, ChevronDown, Globe, User, Sun, Moon, HelpCircle } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
+import { useFeatureGuide } from '@/hooks/useFeatureGuide';
 import { authApi } from '@/lib/api';
 import { getInitials } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 const ROLE_LABELS: Record<string, { ar: string; en: string }> = {
-  SUPER_ADMIN:         { ar: 'مدير النظام',   en: 'Super Admin' },
-  ADMIN:               { ar: 'مشرف',           en: 'Admin' },
-  PROJECT_MANAGER:     { ar: 'مدير مشروع',     en: 'Project Manager' },
-  COST_CONTROLLER:     { ar: 'مراقب تكاليف',   en: 'Cost Controller' },
-  PROCUREMENT_OFFICER: { ar: 'مسؤول مشتريات',  en: 'Procurement Officer' },
-  VIEWER:              { ar: 'مشاهد',           en: 'Viewer' },
+  SUPER_ADMIN:         { ar: 'مدير النظام',      en: 'Super Admin' },
+  ADMIN:               { ar: 'مشرف',              en: 'Admin' },
+  OPERATIONS_MANAGER:  { ar: 'مدير عمليات',       en: 'Operations Manager' },
+  PROJECT_MANAGER:     { ar: 'مدير مشروع',        en: 'Project Manager' },
+  SITE_ENGINEER:       { ar: 'مهندس موقع',        en: 'Site Engineer' },
+  PROCUREMENT_OFFICER: { ar: 'مسؤول مشتريات',     en: 'Procurement Officer' },
+  COST_CONTROLLER:     { ar: 'مراقب تكاليف',      en: 'Cost Controller' },
+  EXECUTIVE_VIEWER:    { ar: 'مشاهد تنفيذي',      en: 'Executive Viewer' },
+  VIEWER:              { ar: 'مشاهد',              en: 'Viewer' },
 };
 
 export function Topbar() {
@@ -28,6 +32,7 @@ export function Topbar() {
   const { user, clearAuth }    = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const [menuOpen, setMenuOpen] = useState(false);
+  const { openGuide } = useFeatureGuide();
   const isRtl = locale === 'ar';
 
   const handleLogout = async () => {
@@ -76,6 +81,17 @@ export function Topbar() {
         >
           <Globe className="w-3.5 h-3.5" />
           <span>{otherLocaleLabel}</span>
+        </button>
+
+        {/* Help / Feature guide */}
+        <button
+          onClick={openGuide}
+          className="w-8 h-8 rounded-md flex items-center justify-center
+                     text-text-muted hover:bg-surface-hover hover:text-text-primary transition-colors"
+          title={isRtl ? 'دليل الاستخدام' : 'Feature guide'}
+          aria-label="Open feature guide"
+        >
+          <HelpCircle className="w-4 h-4" />
         </button>
 
         {/* Theme toggle */}

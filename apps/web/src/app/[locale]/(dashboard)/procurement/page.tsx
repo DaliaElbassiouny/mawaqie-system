@@ -47,6 +47,7 @@ const STATUS_CONFIG: Record<
   FULFILLED: { ar: 'منفذ', en: 'Fulfilled', variant: 'success' },
   RECEIVED: { ar: 'مستلم', en: 'Received', variant: 'success' },
   ORDERED: { ar: 'مطلوب', en: 'Ordered', variant: 'info' },
+  COMPLETED: { ar: 'مكتمل', en: 'Completed', variant: 'success' },
 };
 
 const PRIORITY_CONFIG: Record<PRPriority, { ar: string; en: string; color: string }> = {
@@ -159,10 +160,12 @@ export default function ProcurementPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">
-            {isAr ? 'المشتريات' : 'Procurement'}
+            {isAr ? 'طلبات الشراء' : 'Purchase Requests'}
           </h1>
           <p className="mt-0.5 text-sm text-text-muted">
-            {isAr ? 'إنشاء ومتابعة طلبات الشراء' : 'Create and track purchase requests'}
+            {isAr
+              ? 'عرض ومتابعة طلبات الشراء التي تم إنشاؤها واعتمادها.'
+              : 'View and track purchase requests that have been created and approved.'}
           </p>
         </div>
         <button

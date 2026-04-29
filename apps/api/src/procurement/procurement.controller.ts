@@ -21,6 +21,7 @@ import {
   ApproveRejectPRDto,
   CreatePurchaseRequestDto,
   ListPurchaseRequestsQueryDto,
+  MarkDeliveryDto,
   RejectPRDto,
   SubmitPRDto,
   UpdatePurchaseRequestDto,
@@ -116,5 +117,16 @@ export class ProcurementController {
     @CurrentUser() caller: AuthUser,
   ) {
     return this.service.rejectStage(id, dto, caller);
+  }
+
+  @Post('requests/:id/delivery')
+  @RequirePermissions(PERMISSIONS.PROCUREMENT_UPDATE)
+  @ApiOperation({ summary: 'Advance delivery status: APPROVED→FULFILLED→RECEIVED→COMPLETED' })
+  markDelivery(
+    @Param('id') id: string,
+    @Body() dto: MarkDeliveryDto,
+    @CurrentUser() caller: AuthUser,
+  ) {
+    return this.service.markDelivery(id, dto, caller);
   }
 }

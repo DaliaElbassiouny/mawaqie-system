@@ -18,7 +18,20 @@ import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-const DEFAULT_PASSWORD = 'Admin@123456';
+const SEED_PASSWORD = process.env.SEED_DEMO_PASSWORD;
+if (process.env.NODE_ENV === 'production' && !SEED_PASSWORD) {
+  throw new Error(
+    'SEED_DEMO_PASSWORD must be set in production. ' +
+    'Add it to Render dashboard environment variables before seeding.',
+  );
+}
+if (!SEED_PASSWORD) {
+  console.warn(
+    '⚠️  SEED_DEMO_PASSWORD not set — using local dev fallback.\n' +
+    '   Never run this seed in production without setting SEED_DEMO_PASSWORD.',
+  );
+}
+const seedPassword = SEED_PASSWORD ?? 'CDC@LocalDev2026!';
 
 const permissionDefs = [
   { code: 'users:view', nameAr: 'عرض المستخدمين', nameEn: 'View Users', module: 'users', action: 'view' },
@@ -74,7 +87,7 @@ const roleDefinitions = [
     nameAr: 'مدير النظام',
     nameEn: 'Super Admin',
     isSystem: true,
-    permissions: permissionDefs.map((permission) => permission.code),
+    permissions: permissionDefs.map((p) => p.code),
   },
   {
     code: 'ADMIN',
@@ -82,39 +95,50 @@ const roleDefinitions = [
     nameEn: 'Admin',
     isSystem: true,
     permissions: [
-      'users:view',
-      'users:create',
-      'users:update',
-      'users:manage_roles',
+      // Users — no delete
+      'users:view', 'users:create', 'users:update', 'users:manage_roles',
+      // Roles — view only (structural changes are SUPER_ADMIN)
       'roles:view',
-      'clients:view',
-      'clients:create',
-      'clients:update',
-      'tenders:view',
-      'tenders:create',
-      'tenders:update',
-      'projects:view',
-      'projects:create',
-      'projects:update',
-      'operations:view',
-      'operations:create',
-      'operations:update',
-      'operations:delete',
-      'operations:approve',
-      'cost:view',
-      'cost:create',
-      'cost:update',
-      'procurement:view',
-      'procurement:create',
-      'procurement:update',
-      'procurement:approve',
-      'settings:view',
-      'settings:update',
-      'reports:view',
-      'reports:export',
+      // Clients / Tenders — no delete
+      'clients:view', 'clients:create', 'clients:update',
+      'tenders:view', 'tenders:create', 'tenders:update',
+      // Projects — no delete
+      'projects:view', 'projects:create', 'projects:update',
+      // Operations — full including delete
+      'operations:view', 'operations:create', 'operations:update', 'operations:delete', 'operations:approve',
+      // Cost — full
+      'cost:view', 'cost:create', 'cost:update', 'cost:approve',
+      // Procurement — full
+      'procurement:view', 'procurement:create', 'procurement:update', 'procurement:approve',
+      // Settings / Reports / Audit / Imports — full
+      'settings:view', 'settings:update',
+      'reports:view', 'reports:export',
       'audit:view',
-      'imports:view',
-      'imports:run',
+      'imports:view', 'imports:run',
+      // Documents / Notifications
+      'documents:view', 'documents:create', 'documents:delete',
+      'notifications:view',
+    ],
+  },
+  {
+    code: 'OPERATIONS_MANAGER',
+    nameAr: 'مدير عمليات',
+    nameEn: 'Operations Manager',
+    isSystem: true,
+    permissions: [
+      'clients:view', 'tenders:view',
+      // Projects — view + update (no create/delete)
+      'projects:view', 'projects:update',
+      // Operations — no delete (SUPER_ADMIN/ADMIN only)
+      'operations:view', 'operations:create', 'operations:update', 'operations:approve',
+      // Cost — view only
+      'cost:view',
+      // Procurement — view only
+      'procurement:view',
+      // Reports + Documents + Notifications
+      'reports:view', 'reports:export',
+      'documents:view', 'documents:create',
+      'notifications:view',
     ],
   },
   {
@@ -123,58 +147,18 @@ const roleDefinitions = [
     nameEn: 'Project Manager',
     isSystem: true,
     permissions: [
-      'clients:view',
-      'tenders:view',
-      'projects:view',
-      'projects:create',
-      'projects:update',
-      'operations:view',
-      'operations:create',
-      'operations:update',
-      'operations:delete',
-      'operations:approve',
-      'cost:view',
-      'cost:create',
-      'cost:update',
-      'cost:approve',
-      'procurement:view',
-      'procurement:create',
-      'procurement:update',
-      'procurement:approve',
-      'reports:view',
-      'reports:export',
-    ],
-  },
-  {
-    code: 'COST_CONTROLLER',
-    nameAr: 'مراقب تكاليف',
-    nameEn: 'Cost Controller',
-    isSystem: true,
-    permissions: [
-      'projects:view',
-      'operations:view',
-      'cost:view',
-      'cost:create',
-      'cost:update',
-      'procurement:view',
-      'procurement:approve',
-      'reports:view',
-      'reports:export',
-    ],
-  },
-  {
-    code: 'PROCUREMENT_OFFICER',
-    nameAr: 'مسؤول مشتريات',
-    nameEn: 'Procurement Officer',
-    isSystem: true,
-    permissions: [
-      'projects:view',
-      'operations:view',
-      'procurement:view',
-      'procurement:create',
-      'procurement:update',
-      'procurement:approve',
-      'reports:view',
+      'clients:view', 'tenders:view',
+      // Projects — no delete
+      'projects:view', 'projects:create', 'projects:update',
+      // Operations — no delete
+      'operations:view', 'operations:create', 'operations:update', 'operations:approve',
+      // Cost — no approve (stays with COST_CONTROLLER / ADMIN)
+      'cost:view', 'cost:create', 'cost:update',
+      // Procurement — full (PM_REVIEW stage gate is enforced in service)
+      'procurement:view', 'procurement:create', 'procurement:update', 'procurement:approve',
+      'reports:view', 'reports:export',
+      'documents:view', 'documents:create',
+      'notifications:view',
     ],
   },
   {
@@ -184,19 +168,63 @@ const roleDefinitions = [
     isSystem: true,
     permissions: [
       'projects:view',
-      'operations:view',
-      'operations:create',
-      'operations:update',
-      'procurement:view',
-      'cost:view',
+      // Operations — no delete/approve
+      'operations:view', 'operations:create', 'operations:update',
+      // Procurement — view + create only (no update/approve)
+      'procurement:view', 'procurement:create',
+      // Documents + Notifications
+      'documents:view', 'documents:create',
+      'notifications:view',
       'reports:view',
     ],
   },
   {
-    code: 'VIEWER',
-    nameAr: 'مشاهد',
-    nameEn: 'Viewer',
+    code: 'PROCUREMENT_OFFICER',
+    nameAr: 'مسؤول مشتريات',
+    nameEn: 'Procurement Officer',
     isSystem: true,
+    permissions: [
+      'projects:view', 'operations:view',
+      'procurement:view', 'procurement:create', 'procurement:update', 'procurement:approve',
+      'reports:view',
+      'documents:view', 'documents:create',
+      'notifications:view',
+    ],
+  },
+  {
+    code: 'COST_CONTROLLER',
+    nameAr: 'مراقب تكاليف',
+    nameEn: 'Cost Controller',
+    isSystem: true,
+    permissions: [
+      'projects:view', 'operations:view',
+      'cost:view', 'cost:create', 'cost:update', 'cost:approve',
+      'procurement:view', 'procurement:approve',
+      'reports:view', 'reports:export',
+      'documents:view', 'documents:create',
+      'notifications:view',
+    ],
+  },
+  {
+    code: 'EXECUTIVE_VIEWER',
+    nameAr: 'مشاهد تنفيذي',
+    nameEn: 'Executive Viewer',
+    isSystem: true,
+    permissions: [
+      'clients:view', 'tenders:view',
+      'projects:view', 'operations:view',
+      'cost:view', 'procurement:view',
+      'reports:view', 'reports:export',
+      'documents:view',
+      'notifications:view',
+    ],
+  },
+  {
+    // Kept as non-system legacy to preserve any existing user-role rows
+    code: 'VIEWER',
+    nameAr: 'مشاهد (قديم)',
+    nameEn: 'Viewer (Legacy)',
+    isSystem: false,
     permissions: ['clients:view', 'tenders:view', 'projects:view', 'cost:view', 'procurement:view', 'reports:view'],
   },
 ] as const;
@@ -426,7 +454,7 @@ async function main() {
   );
   console.log('Seeded system settings');
 
-  const hashedPassword = await bcrypt.hash(DEFAULT_PASSWORD, 12);
+  const hashedPassword = await bcrypt.hash(seedPassword, 12);
 
   const adminUser = await prisma.user.upsert({
     where: { email: 'admin@cdc-system.local' },
@@ -450,6 +478,38 @@ async function main() {
     data: { userId: adminUser.id, roleId: roles.get('SUPER_ADMIN')!, projectId: null },
   });
 
+  // ── Role-test users: one per role ─────────────────────────────────────────
+  // These 8 accounts cover every role for testing. Password = SEED_DEMO_PASSWORD.
+  const roleTestUsers = {
+    admin: await prisma.user.upsert({
+      where: { email: 'manager@cdc-system.local' },
+      update: { password: hashedPassword, nameAr: 'مدير النظام', nameEn: 'System Manager', isActive: true },
+      create: { email: 'manager@cdc-system.local', password: hashedPassword, nameAr: 'مدير النظام', nameEn: 'System Manager', isActive: true },
+    }),
+    opsManager: await prisma.user.upsert({
+      where: { email: 'ops.manager@cdc-system.local' },
+      update: { password: hashedPassword, nameAr: 'مدير العمليات', nameEn: 'Operations Manager', isActive: true },
+      create: { email: 'ops.manager@cdc-system.local', password: hashedPassword, nameAr: 'مدير العمليات', nameEn: 'Operations Manager', isActive: true },
+    }),
+    execViewer: await prisma.user.upsert({
+      where: { email: 'viewer@cdc-system.local' },
+      update: { password: hashedPassword, nameAr: 'المشاهد التنفيذي', nameEn: 'Executive Viewer', isActive: true },
+      create: { email: 'viewer@cdc-system.local', password: hashedPassword, nameAr: 'المشاهد التنفيذي', nameEn: 'Executive Viewer', isActive: true },
+    }),
+  };
+
+  const roleTestAssignments = [
+    { userId: roleTestUsers.admin.id,       roleCode: 'ADMIN' },
+    { userId: roleTestUsers.opsManager.id,  roleCode: 'OPERATIONS_MANAGER' },
+    { userId: roleTestUsers.execViewer.id,  roleCode: 'EXECUTIVE_VIEWER' },
+  ];
+  for (const a of roleTestAssignments) {
+    await prisma.userRole.deleteMany({ where: { userId: a.userId, projectId: null } });
+    await prisma.userRole.create({ data: { userId: a.userId, roleId: roles.get(a.roleCode)!, projectId: null } });
+  }
+  console.log('Seeded role-test users (manager, ops.manager, viewer)');
+
+  // ── Demo data users: kept for demo project/activity assignments ────────────
   const demoUsers = {
     rashed: await prisma.user.upsert({
       where: { email: 'rashed.pm@cdc-system.local' },

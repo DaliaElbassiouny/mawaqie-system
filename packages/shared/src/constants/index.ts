@@ -81,12 +81,16 @@ export type PermissionCode = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 // ─── System Roles ─────────────────────────────────────────────────────────────
 
 export const SYSTEM_ROLES = {
-  SUPER_ADMIN: 'SUPER_ADMIN',
-  ADMIN: 'ADMIN',
-  PROJECT_MANAGER: 'PROJECT_MANAGER',
-  COST_CONTROLLER: 'COST_CONTROLLER',
+  SUPER_ADMIN:         'SUPER_ADMIN',
+  ADMIN:               'ADMIN',
+  OPERATIONS_MANAGER:  'OPERATIONS_MANAGER',
+  PROJECT_MANAGER:     'PROJECT_MANAGER',
+  SITE_ENGINEER:       'SITE_ENGINEER',
   PROCUREMENT_OFFICER: 'PROCUREMENT_OFFICER',
-  VIEWER: 'VIEWER',
+  COST_CONTROLLER:     'COST_CONTROLLER',
+  EXECUTIVE_VIEWER:    'EXECUTIVE_VIEWER',
+  /** @deprecated superseded by EXECUTIVE_VIEWER — kept for data compatibility */
+  VIEWER:              'VIEWER',
 } as const;
 
 // ─── Supported Currencies ─────────────────────────────────────────────────────

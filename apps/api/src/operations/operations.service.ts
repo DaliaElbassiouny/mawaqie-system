@@ -1718,6 +1718,38 @@ export class OperationsService {
       }),
     ]);
 
+    const pageActivityIds = items.map((a) => a.id);
+    const linkedPRRows = pageActivityIds.length
+      ? await this.prisma.purchaseRequest.findMany({
+          where: {
+            activityId: { in: pageActivityIds },
+            status: { notIn: ['CANCELLED'] },
+          },
+          select: {
+            id: true,
+            prNumber: true,
+            activityId: true,
+            status: true,
+            requirementType: true,
+          },
+        })
+      : [];
+
+    const prsByActivity = new Map<
+      string,
+      Array<{ id: string; prNumber: string; status: string; requirementType: string | null }>
+    >();
+    for (const pr of linkedPRRows) {
+      if (!pr.activityId) continue;
+      if (!prsByActivity.has(pr.activityId)) prsByActivity.set(pr.activityId, []);
+      prsByActivity.get(pr.activityId)!.push({
+        id: pr.id,
+        prNumber: pr.prNumber,
+        status: pr.status,
+        requirementType: pr.requirementType,
+      });
+    }
+
     const summary = allMatching
       .map(serializeActivity)
       .flatMap((activity) =>
@@ -1744,7 +1776,10 @@ export class OperationsService {
       );
 
     return {
-      items: items.map(serializeActivity),
+      items: items.map((a) => ({
+        ...serializeActivity(a),
+        linkedPRs: prsByActivity.get(a.id) ?? [],
+      })),
       total,
       page,
       limit,

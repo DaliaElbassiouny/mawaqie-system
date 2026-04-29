@@ -252,6 +252,7 @@ export const procurementApi = {
   submit: (id: string, data?: { note?: string }) => api.post(`/procurement/requests/${id}/submit`, data ?? {}),
   approveStage: (id: string, data?: { note?: string }) => api.post(`/procurement/requests/${id}/approve`, data ?? {}),
   rejectStage: (id: string, data?: { note?: string }) => api.post(`/procurement/requests/${id}/reject`, data ?? {}),
+  markDelivery: (id: string, status: string) => api.post(`/procurement/requests/${id}/delivery`, { status }),
 };
 
 export function getApiErrorMessage(error: unknown, fallback: string) {
