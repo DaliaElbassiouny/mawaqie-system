@@ -53,12 +53,12 @@ const GUIDE_STEPS: GuideStep[] = [
     permission: 'operations:view',
   },
   {
-    titleAr: 'احتياجات الأنشطة',
-    titleEn: 'Activity Needs',
+    titleAr: 'احتياجات المشروع',
+    titleEn: 'Project Needs',
     bodyAr:
-      'هنا يتم تحديد المواد أو المعدات أو الخدمات التي يحتاجها كل نشاط في الموقع.\n\nمتاح: لا يحتاج طلب شراء.\nيحتاج طلب شراء: يمكن تحويله إلى طلب شراء رسمي.\nتم تحويله لطلب شراء: تم إنشاء طلب شراء مرتبط بهذا الاحتياج.',
+      'هنا يتم متابعة المواد والمعدات والخدمات المطلوبة لتنفيذ المشروع، ويمكن تحويل الاحتياج غير المتوفر إلى طلب شراء رسمي.\n\naحتياج مشروع ← تحويل إلى طلب شراء ← اعتماد ← تنفيذ واستلام',
     bodyEn:
-      'Define the materials, equipment, or services each site activity needs.\n\nAvailable: no purchase request is needed.\nNeeds purchase request: can be converted into a formal request.\nConverted: a linked purchase request has been created.',
+      'Track materials, equipment, and services required for project execution. Convert any unmet need directly into a formal purchase request.\n\nProject need → Convert → Approval → Execution & receiving',
     permission: 'operations:view',
   },
   {
@@ -73,7 +73,7 @@ const GUIDE_STEPS: GuideStep[] = [
   {
     titleAr: 'طلبات الشراء',
     titleEn: 'Purchase Requests',
-    bodyAr: 'تعرض الطلبات الرسمية التي تم إنشاؤها سواء من احتياجات الأنشطة أو مباشرة من المستخدمين.',
+    bodyAr: 'تعرض الطلبات الرسمية التي تم إنشاؤها سواء من احتياجات المشروع أو مباشرة من المستخدمين.',
     bodyEn: 'Shows formal requests created from activity needs or directly by users.',
     permission: 'procurement:view',
   },

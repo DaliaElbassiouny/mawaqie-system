@@ -233,8 +233,8 @@
     },
     "tabs": {
       "procurement": {
-        "title": "Procurement",
-        "description": "Reserved for purchase requests and purchase orders in a later phase."
+        "title": "Project Needs",
+        "description": "Track materials, equipment, and services needed for project execution."
       },
       "costControl": {
         "title": "Cost Control",
@@ -610,10 +610,10 @@
     }
   },
   "procurement": {
-    "title": "Procurement",
+    "title": "Project Needs",
     "comingSoon": "Coming soon in the next phase",
-    "subtitle": "Track procurement-linked operational needs",
-    "hint": "This view shows activities waiting on materials or equipment and lets procurement update readiness directly.",
+    "subtitle": "Track materials, equipment, and services required for project execution. Convert unmet needs into purchase requests.",
+    "hint": "You can convert any unmet need into a formal purchase request with one click.",
     "noAccess": "You do not have permission to view procurement readiness for this project.",
     "allTypes": "All Types",
     "allStatuses": "All Statuses",
