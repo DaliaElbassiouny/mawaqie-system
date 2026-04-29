@@ -460,6 +460,7 @@ model OperationActivity {
   @@unique([projectId, code])
   @@index([scheduleId])
   @@index([projectId])
+  @@index([responsibleUserId])
   @@index([status])
   @@index([lookaheadStatus])
   @@index([priority])

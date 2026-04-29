@@ -1,4 +1,5 @@
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, Max, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 
 export const DOCUMENT_ENTITY_TYPES = ['project', 'purchase_request', 'activity', 'invoice', 'extract'] as const;
@@ -32,4 +33,19 @@ export class ListDocumentsQueryDto {
   @IsOptional()
   @IsEnum(DOCUMENT_CATEGORIES)
   category?: DocumentCategory;
+
+  @ApiPropertyOptional({ default: 1 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  page?: number;
+
+  @ApiPropertyOptional({ default: 50 })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(200)
+  limit?: number;
 }

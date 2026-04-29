@@ -181,19 +181,41 @@ export class ProcurementService {
   private buildItemRows(dto: CreatePurchaseRequestDto) {
     const sourceItems =
       dto.items && dto.items.length > 0
-        ? dto.items.map((item) => ({
-            titleAr: item.titleAr,
-            titleEn: item.titleEn ?? null,
-            description: item.description ?? null,
-            quantity: this.toDecimal(item.quantity),
-            unit: item.unit ?? null,
-            unitPrice: this.toDecimal(item.unitPrice),
-            estimatedTotal: this.toDecimal(item.estimatedTotal),
-            approvedQuantity: this.toDecimal(item.approvedQuantity),
-            approvedUnitPrice: this.toDecimal(item.approvedUnitPrice),
-            approvedTotal: this.toDecimal(item.approvedTotal),
-            notes: item.notes ?? null,
-          }))
+        ? dto.items.map((item, idx) => {
+            const qty = this.toDecimal(item.quantity);
+            const unitPrice = this.toDecimal(item.unitPrice);
+
+            // Compute estimatedTotal server-side when both components are present
+            let estimatedTotal: Prisma.Decimal | null;
+            if (qty && unitPrice) {
+              estimatedTotal = qty.mul(unitPrice);
+              // Reject if the client sent a value that conflicts with the computed total
+              if (
+                item.estimatedTotal != null &&
+                !estimatedTotal.equals(new Prisma.Decimal(item.estimatedTotal))
+              ) {
+                throw new BadRequestException(
+                  `البند ${idx + 1}: الإجمالي المقدر لا يتطابق مع حاصل ضرب الكمية × السعر`,
+                );
+              }
+            } else {
+              estimatedTotal = this.toDecimal(item.estimatedTotal);
+            }
+
+            return {
+              titleAr: item.titleAr,
+              titleEn: item.titleEn ?? null,
+              description: item.description ?? null,
+              quantity: qty,
+              unit: item.unit ?? null,
+              unitPrice,
+              estimatedTotal,
+              approvedQuantity: this.toDecimal(item.approvedQuantity),
+              approvedUnitPrice: this.toDecimal(item.approvedUnitPrice),
+              approvedTotal: this.toDecimal(item.approvedTotal),
+              notes: item.notes ?? null,
+            };
+          })
         : this.buildDefaultItems(dto);
 
     return sourceItems.map((item, index) => ({

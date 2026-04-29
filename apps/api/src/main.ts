@@ -7,6 +7,14 @@ import { AppModule } from './app.module';
 const logger = new Logger('Bootstrap');
 
 async function bootstrap() {
+  // ── Production environment guard ─────────────────────────────────────────────
+  if (process.env.NODE_ENV === 'production' && !process.env.FRONTEND_URL) {
+    throw new Error(
+      'FRONTEND_URL environment variable must be set in production. ' +
+      'Add it to the Render dashboard environment variables.',
+    );
+  }
+
   const app = await NestFactory.create(AppModule);
 
   // ── Security headers ────────────────────────────────────────────────────────

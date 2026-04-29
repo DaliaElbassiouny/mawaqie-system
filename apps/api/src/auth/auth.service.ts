@@ -10,6 +10,12 @@ import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { LoginDto } from './dto/login.dto';
 
+// bcrypt hash used for constant-time comparisons when a login email is not found.
+// Prevents user enumeration via timing differences (a real compare takes ~80 ms;
+// skipping it entirely would reveal which emails exist).
+const TIMING_DUMMY_HASH =
+  '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -33,17 +39,17 @@ export class AuthService {
       },
     });
 
-    if (!user) {
+    // Always run bcrypt regardless of whether the user was found so that
+    // response timing is the same for valid and invalid emails.
+    const hashToCheck = user?.password ?? TIMING_DUMMY_HASH;
+    const passwordMatch = await bcrypt.compare(dto.password, hashToCheck);
+
+    if (!user || !passwordMatch) {
       throw new UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
     }
 
     if (!user.isActive) {
       throw new UnauthorizedException('حسابك معطل. تواصل مع المشرف');
-    }
-
-    const passwordMatch = await bcrypt.compare(dto.password, user.password);
-    if (!passwordMatch) {
-      throw new UnauthorizedException('البريد الإلكتروني أو كلمة المرور غير صحيحة');
     }
 
     const roles = user.userRoles.map((ur) => ur.role.code);
@@ -157,7 +163,7 @@ export class AuthService {
       ),
     ]);
 
-    const hashedRefresh = await bcrypt.hash(refreshToken, 10);
+    const hashedRefresh = await bcrypt.hash(refreshToken, 12);
     await this.prisma.user.update({
       where: { id: userId },
       data: { refreshToken: hashedRefresh },

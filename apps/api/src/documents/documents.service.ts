@@ -118,19 +118,28 @@ export class DocumentsService {
   }
 
   async list(query: ListDocumentsQueryDto, caller: AuthUser) {
+    const page = query.page ?? 1;
+    const limit = Math.min(query.limit ?? 50, 200);
+    const skip = (page - 1) * limit;
+
     const where = {
       ...(query.entityType && { entityType: query.entityType }),
       ...(query.entityId && { entityId: query.entityId }),
       ...(query.category && { category: query.category }),
     };
 
-    const items = await this.prisma.document.findMany({
-      where,
-      select: DOC_SELECT,
-      orderBy: { createdAt: 'desc' },
-    });
+    const [items, total] = await Promise.all([
+      this.prisma.document.findMany({
+        where,
+        select: DOC_SELECT,
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.document.count({ where }),
+    ]);
 
-    return { items };
+    return { items, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   async getDownloadInfo(id: string, caller: AuthUser) {
