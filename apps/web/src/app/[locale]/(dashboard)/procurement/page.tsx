@@ -1,6 +1,6 @@
 'use client';
 
-import { useDeferredValue, useState } from 'react';
+import { useDeferredValue, useEffect, useState } from 'react';
 import { useLocale } from 'next-intl';
 import {
   CheckCircle2,
@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge';
 import { PurchaseRequestDrawer } from '@/components/procurement/PurchaseRequestDrawer';
 import {
   useProcurementDashboard,
+  usePurchaseRequest,
   usePurchaseRequests,
   type PRPriority,
   type PRRequirementType,
@@ -109,6 +110,22 @@ export default function ProcurementPage() {
 
   const [drawerMode, setDrawerMode] = useState<'create' | 'view' | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<PurchaseRequest | null>(null);
+
+  // Deep-link: open a specific PR when ?requestId=<id> is in the URL
+  const [deepLinkId, setDeepLinkId] = useState('');
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const id = new URLSearchParams(window.location.search).get('requestId');
+    if (id) setDeepLinkId(id);
+  }, []);
+  const { data: deepLinkedPR } = usePurchaseRequest(deepLinkId);
+  useEffect(() => {
+    if (deepLinkedPR && drawerMode === null) {
+      setSelectedRequest(deepLinkedPR);
+      setDrawerMode('view');
+      setDeepLinkId('');
+    }
+  }, [deepLinkedPR, drawerMode]);
 
   const { data: dashboard, isLoading: dashboardLoading } = useProcurementDashboard();
   const { data: projectsData } = useProjects({ page: 1, limit: 100 });

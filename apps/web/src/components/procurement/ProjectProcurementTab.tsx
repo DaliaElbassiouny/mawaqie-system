@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { PackageCheck, PlusCircle } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import Link from 'next/link';
+import { ArrowUpRight, PackageCheck, PlusCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,7 +46,7 @@ const STATUS_AR: Record<RequirementReadinessStatus, string> = {
   REQUESTED: 'تم تحويله لطلب شراء',
   PARTIALLY_AVAILABLE: 'متوفر جزئيًا',
   AVAILABLE: 'متاح',
-  BLOCKED: 'محجوب',
+  BLOCKED: 'يحتاج طلب شراء',
 };
 
 function StatCard({
@@ -74,85 +75,115 @@ interface ConvertTarget {
 }
 
 function RequirementRow({
-  projectId,
   activity,
   requirementType,
   linkedPRs,
   canCreate,
   onConvert,
 }: {
-  projectId: string;
   activity: ActivityRecord;
   requirementType: ProcurementRequirementType;
   linkedPRs: LinkedPRSummary[];
   canCreate: boolean;
   onConvert: (target: ConvertTarget) => void;
 }) {
+  const locale = useLocale();
   const to = useTranslations('operations');
+
   const requirement = activity.requirements.find(
     (item) => item.procurementLinked && item.type === requirementType,
   );
 
   if (!requirement) return null;
 
+  // PRs linked to this specific requirement type (or type-agnostic ones)
   const typeLinkedPRs = linkedPRs.filter(
     (pr) => !pr.requirementType || pr.requirementType === requirementType,
   );
   const hasLinkedPR = typeLinkedPRs.length > 0;
 
+  // Displayed status overrides the DB readiness status when a PR is already linked
+  const displayStatus = hasLinkedPR ? 'تم تحويله لطلب شراء' : STATUS_AR[requirement.status];
+  const displayVariant: 'default' | 'success' | 'warning' | 'danger' | 'muted' = hasLinkedPR
+    ? 'success'
+    : REQUIREMENT_VARIANT[requirement.status];
+
   const canConvert =
     canCreate &&
     !hasLinkedPR &&
-    (requirement.status === 'PENDING' || requirement.status === 'BLOCKED');
+    (requirement.status === 'PENDING' ||
+      requirement.status === 'BLOCKED' ||
+      requirement.status === 'PARTIALLY_AVAILABLE');
+
+  const convertLabel =
+    requirement.status === 'PARTIALLY_AVAILABLE'
+      ? 'تحويل المتبقي إلى طلب شراء'
+      : 'تحويل إلى طلب شراء';
 
   return (
-    <div className="rounded-lg border border-surface-border bg-surface-card p-3 space-y-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Badge variant="muted">{to(`requirementTypes.${requirement.type}`)}</Badge>
-            <Badge variant={REQUIREMENT_VARIANT[requirement.status]}>
-              {STATUS_AR[requirement.status]}
-            </Badge>
-          </div>
-          <p className="mt-2 text-sm font-medium text-text-primary">{formatText(requirement.value)}</p>
-          {requirement.notes && !hasLinkedPR && (
-            <p className="mt-1 text-xs text-text-muted whitespace-pre-wrap">{formatText(requirement.notes)}</p>
-          )}
+    <div className="rounded-lg border border-surface-border bg-surface-card p-3 space-y-2">
+      {/* Header row: type badge + status badge */}
+      <div className="flex items-center gap-2 flex-wrap">
+        <Badge variant="muted">{to(`requirementTypes.${requirement.type}`)}</Badge>
+        <Badge variant={displayVariant}>{displayStatus}</Badge>
+      </div>
 
-          {hasLinkedPR && (
-            <div className="mt-2 flex flex-wrap gap-2">
-              {typeLinkedPRs.map((pr) => (
-                <span
-                  key={pr.id}
-                  className="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 text-xs font-mono text-brand"
-                >
-                  {pr.prNumber}
-                </span>
-              ))}
+      {/* Requirement description */}
+      <p className="text-sm font-medium text-text-primary">{formatText(requirement.value)}</p>
+
+      {/* Notes — only when no linked PR */}
+      {requirement.notes && !hasLinkedPR && (
+        <p className="text-xs text-text-muted whitespace-pre-wrap">{formatText(requirement.notes)}</p>
+      )}
+
+      {/* Linked PR section */}
+      {hasLinkedPR && (
+        <div className="space-y-1.5 pt-0.5">
+          {typeLinkedPRs.map((pr) => (
+            <div key={pr.id} className="flex items-center justify-between gap-2">
+              <span className="text-xs text-text-muted">
+                طلب الشراء:{' '}
+                <span className="font-mono font-semibold text-brand">{pr.prNumber}</span>
+              </span>
+              <Link
+                href={`/${locale}/procurement?requestId=${pr.id}`}
+                className="inline-flex items-center gap-1 rounded-md border border-surface-border bg-surface-card px-2.5 py-1 text-xs font-medium text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary"
+              >
+                عرض طلب الشراء
+                <ArrowUpRight className="h-3 w-3 opacity-60" />
+              </Link>
             </div>
-          )}
+          ))}
         </div>
+      )}
 
-        {canConvert && (
+      {/* AVAILABLE with no linked PR */}
+      {!hasLinkedPR && requirement.status === 'AVAILABLE' && (
+        <p className="text-xs text-text-muted">لا يحتاج طلب شراء</p>
+      )}
+
+      {/* Convert button */}
+      {canConvert && (
+        <div className="pt-0.5">
           <Button
             type="button"
             size="sm"
             variant="outline"
-            className="shrink-0 gap-1.5 text-xs"
+            className="gap-1.5 text-xs"
             onClick={() =>
-              onConvert({
-                activity,
-                requirementType,
-                requirementValue: requirement.value,
-              })
+              onConvert({ activity, requirementType, requirementValue: requirement.value })
             }
           >
             <PlusCircle className="h-3.5 w-3.5" />
-            تحويل إلى طلب شراء
+            {convertLabel}
           </Button>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* No-permission hint */}
+      {!canCreate && !hasLinkedPR && requirement.status !== 'AVAILABLE' && (
+        <p className="text-xs text-text-muted">ليس لديك صلاحية إنشاء طلب شراء</p>
+      )}
     </div>
   );
 }
@@ -172,16 +203,24 @@ function ActivityCard({
   const to = useTranslations('operations');
   const linkedPRs = activity.linkedPRs ?? [];
 
+  // Activity-level badge also overrides if any requirement has a linked PR
+  const hasAnyLinkedPR = linkedPRs.length > 0;
+  const activityStatus = activity.procurementReadinessStatus ?? 'PENDING';
+  const activityDisplayVariant = hasAnyLinkedPR
+    ? 'success'
+    : REQUIREMENT_VARIANT[activityStatus];
+  const activityDisplayLabel = hasAnyLinkedPR
+    ? 'تم تحويله لطلب شراء'
+    : STATUS_AR[activityStatus];
+
   return (
     <div className="rounded-xl border border-surface-border bg-surface-card p-4 space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-xs font-mono text-text-muted">{activity.code}</span>
-            <Badge variant={REQUIREMENT_VARIANT[activity.procurementReadinessStatus ?? 'PENDING']}>
-              {STATUS_AR[activity.procurementReadinessStatus ?? 'PENDING']}
-            </Badge>
-            {activity.procurementBlocked && (
+            <Badge variant={activityDisplayVariant}>{activityDisplayLabel}</Badge>
+            {activity.procurementBlocked && !hasAnyLinkedPR && (
               <Badge variant="danger">{to('procurementBlocked')}</Badge>
             )}
           </div>
@@ -204,7 +243,6 @@ function ActivityCard({
         {REQUIREMENT_TYPES.map((type) => (
           <RequirementRow
             key={type}
-            projectId={projectId}
             activity={activity}
             requirementType={type}
             linkedPRs={linkedPRs}
@@ -230,7 +268,7 @@ function ActivityCard({
         </div>
       )}
 
-      {activity.procurementBlockedItems.length > 0 && (
+      {activity.procurementBlockedItems.length > 0 && !hasAnyLinkedPR && (
         <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-300">
           <p className="font-medium">{t('blockedHint')}</p>
           <p className="mt-1">
