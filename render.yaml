@@ -1,14 +1,15 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # Render Blueprint — MAWAQEI ELNUJUM / شركة مواقع النجوم للمقاولات
-# Creates: PostgreSQL database + NestJS API + Next.js web app
+# Backend only: PostgreSQL database + NestJS API.
+# The frontend (Next.js) is deployed separately on Vercel — see DEPLOY.md.
 #
 # How to use:
 #   1. Push this repo to GitHub.
 #   2. Render Dashboard → New → Blueprint → connect this repo.
-#   3. Render reads this file and provisions all three resources.
+#   3. Render reads this file and provisions the database + API.
 #   4. After the first deploy, seed the database (see DEPLOY.md).
 #
-# Note: service URLs follow the pattern https://<name>.onrender.com
+# API public URL pattern: https://mawaqie-api.onrender.com
 # ─────────────────────────────────────────────────────────────────────────────
 
 databases:
@@ -51,28 +52,7 @@ services:
         value: 15m
       - key: JWT_REFRESH_EXPIRES_IN
         value: 7d
-      # CORS — must match the web service public URL
+      # CORS — set this to your Vercel frontend URL after the first Vercel deploy.
+      # Supports a comma-separated list of allowed origins.
       - key: FRONTEND_URL
-        value: https://mawaqie-web.onrender.com
-
-  # ── Frontend (Next.js) ─────────────────────────────────────────────────────
-  - type: web
-    name: mawaqie-web
-    runtime: node
-    plan: free
-    region: frankfurt
-    branch: main
-    buildCommand: >-
-      corepack enable &&
-      pnpm install --frozen-lockfile &&
-      pnpm --filter @mawaqie/shared build &&
-      pnpm --filter @mawaqie/web build
-    startCommand: pnpm --filter @mawaqie/web start
-    envVars:
-      - key: NODE_ENV
-        value: production
-      # Baked into the Next.js build — must point at the API public URL
-      - key: NEXT_PUBLIC_API_URL
-        value: https://mawaqie-api.onrender.com/api/v1
-      - key: NEXT_PUBLIC_DEFAULT_LOCALE
-        value: ar
+        value: https://mawaqie-system.vercel.app
