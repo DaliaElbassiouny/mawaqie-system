@@ -29,7 +29,7 @@ services:
     branch: main
     buildCommand: >-
       corepack enable &&
-      pnpm install --frozen-lockfile &&
+      pnpm install --frozen-lockfile --prod=false &&
       pnpm --filter @mawaqie/shared build &&
       pnpm --filter @mawaqie/api exec prisma generate &&
       pnpm --filter @mawaqie/api build
