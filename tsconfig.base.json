@@ -16,9 +16,8 @@
     "strictNullChecks": true,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "baseUrl": ".",
     "paths": {
-      "@mawaqie/shared": ["packages/shared/dist/index"]
+      "@mawaqie/shared": ["./packages/shared/dist/index"]
     }
   }
 }
