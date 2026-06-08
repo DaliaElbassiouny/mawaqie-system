@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 110" role="img" aria-label="MAWAQEI ELNUJUM">
+  <defs>
+    <linearGradient id="mawaqieMark" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#86DCF0"/>
+      <stop offset="42%" stop-color="#33B2DF"/>
+      <stop offset="100%" stop-color="#0E6FB2"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- main infinity ribbon -->
+    <path d="M100 55 C100 30 64 30 50 55 C38 80 100 80 100 55 C100 30 136 30 150 55 C162 80 100 80 100 55 Z"
+          stroke="url(#mawaqieMark)" stroke-width="17"/>
+    <!-- lighter ribbon highlight to echo the double-wave look -->
+    <path d="M100 55 C100 30 64 30 50 55 C38 80 100 80 100 55 C100 30 136 30 150 55 C162 80 100 80 100 55 Z"
+          stroke="#CDEEF8" stroke-width="4" opacity="0.75" transform="translate(-1.5 -3)"/>
+  </g>
+</svg>

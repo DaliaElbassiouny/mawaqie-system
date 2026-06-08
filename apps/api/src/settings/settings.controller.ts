@@ -8,7 +8,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
-import { PERMISSIONS } from '@cdc/shared';
+import { PERMISSIONS } from '@mawaqie/shared';
 import { SettingsService, UpdateSettingDto, BulkUpdateSettingsDto } from './settings.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';

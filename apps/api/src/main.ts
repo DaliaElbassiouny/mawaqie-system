@@ -51,8 +51,8 @@ async function bootstrap() {
   // ── Swagger (dev/staging only — not exposed in production) ──────────────────
   if (process.env.NODE_ENV !== 'production') {
     const config = new DocumentBuilder()
-      .setTitle('CDC System API')
-      .setDescription('نظام التحكم بالتكاليف — Cost & Document Control System')
+      .setTitle('MAWAQEI ELNUJUM API')
+      .setDescription('شركة مواقع النجوم للمقاولات — نظام إدارة المشاريع والتكاليف والمشتريات')
       .setVersion('1.0')
       .addBearerAuth()
       .build();

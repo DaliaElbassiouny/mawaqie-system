@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { Prisma, TenderStatus } from '@prisma/client';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { CreateTenderDto, UpdateTenderDto } from './dto/tender.dto';

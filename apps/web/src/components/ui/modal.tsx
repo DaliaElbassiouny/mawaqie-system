@@ -41,9 +41,10 @@ export function Modal({
         <Dialog.Content
           aria-describedby={description ? undefined : 'modal-desc'}
           className={cn(
-            'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full',
+            'fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2',
+            'w-[calc(100%-1.5rem)] max-h-[92vh] flex flex-col overflow-hidden',
             SIZE_CLASS[size],
-            'bg-surface-card border border-surface-border rounded-2xl shadow-modal overflow-hidden',
+            'bg-surface-card border border-surface-border rounded-2xl shadow-modal',
             'data-[state=open]:animate-in data-[state=closed]:animate-out',
             'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
             'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
@@ -52,11 +53,11 @@ export function Modal({
             className,
           )}
         >
-          {/* Gold top accent stripe */}
-          <div className="h-0.5 bg-gradient-to-r from-brand/60 via-brand to-brand/30" />
+          {/* Brand top accent stripe */}
+          <div className="h-0.5 flex-shrink-0 bg-gradient-to-r from-brand/60 via-brand to-brand/30" />
 
           {/* Header */}
-          <div className="flex items-start justify-between px-6 pt-5 pb-4">
+          <div className="flex items-start justify-between px-5 sm:px-6 pt-5 pb-4 flex-shrink-0">
             <div>
               <Dialog.Title className="text-base font-semibold text-text-primary">
                 {title}
@@ -76,10 +77,10 @@ export function Modal({
           </div>
 
           {/* Divider */}
-          <div className="h-px bg-surface-border mx-6" />
+          <div className="h-px bg-surface-border mx-5 sm:mx-6 flex-shrink-0" />
 
           {/* Body */}
-          <div className="px-6 pb-6 pt-4">{children}</div>
+          <div className="px-5 sm:px-6 pb-6 pt-4 overflow-y-auto">{children}</div>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

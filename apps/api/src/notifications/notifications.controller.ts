@@ -2,7 +2,7 @@ import { Controller, Get, Patch, Param, Query, UseGuards } from '@nestjs/common'
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { NotificationsService } from './notifications.service';
 import { ListNotificationsQueryDto } from './dto/notification.dto';
 

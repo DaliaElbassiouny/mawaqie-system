@@ -9,7 +9,7 @@ import * as path from 'path';
 import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuditService } from '../audit/audit.service';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { ListDocumentsQueryDto } from './dto/document.dto';
 
 interface MulterFile {

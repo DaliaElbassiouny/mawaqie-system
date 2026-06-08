@@ -60,7 +60,7 @@ export function downloadExcel(
       <head>
         <meta charset="utf-8" />
         <meta name="ProgId" content="Excel.Sheet" />
-        <meta name="Generator" content="CDC System" />
+        <meta name="Generator" content="MAWAQEI ELNUJUM Contracting" />
         <title>${escapeHtml(sheetName)}</title>
       </head>
       <body>${table}</body>

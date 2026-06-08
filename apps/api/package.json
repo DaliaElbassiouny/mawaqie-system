@@ -1,5 +1,5 @@
 {
-  "name": "@cdc/api",
+  "name": "@mawaqie/api",
   "version": "1.0.0",
   "private": true,
   "engines": {
@@ -21,7 +21,7 @@
     "prisma:studio": "prisma studio"
   },
   "dependencies": {
-    "@cdc/shared": "workspace:*",
+    "@mawaqie/shared": "workspace:*",
     "@nestjs/common": "^10.3.8",
     "@nestjs/config": "^3.2.2",
     "@nestjs/core": "^10.3.8",

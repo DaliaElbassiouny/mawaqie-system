@@ -2,13 +2,13 @@ import type { Config } from 'tailwindcss';
 import animate from 'tailwindcss-animate';
 
 /**
- * CDC Design System — Tailwind Configuration
+ * MAWAQEI ELNUJUM Design System — Tailwind Configuration
  *
  * Token strategy:
- *  • semantic tokens (surface, text, brand, gold) → CSS variables → auto-switch per mode
- *  • shell tokens (sidebar, topbar chrome) → always dark, mode-aware via CSS vars
+ *  • semantic tokens (surface, text, brand) → CSS variables → auto-switch per mode
+ *  • shell tokens (sidebar, topbar chrome) → always dark navy, mode-aware via CSS vars
  *  • status colors (emerald, amber, red) → standard Tailwind scale, no override needed
- *  • brand = GOLD (not blue) — blue kept only as 'info' status
+ *  • brand = AZURE BLUE — matches the corporate infinity-wave logo
  */
 export default {
   darkMode: ['class'],
@@ -36,8 +36,8 @@ export default {
           inverted:  'hsl(var(--text-inverted) / <alpha-value>)',
         },
 
-        // ── Brand = CDC Gold ─────────────────────────────────────────
-        // The primary CDC accent — replaces blue as the identity color.
+        // ── Brand = Mawaqie Azure Blue ───────────────────────────────
+        // The primary accent — matches the corporate infinity-wave logo.
         // Shade scale shifts between light/dark mode via CSS vars.
         brand: {
           DEFAULT: 'hsl(var(--brand) / <alpha-value>)',
@@ -53,7 +53,7 @@ export default {
           900: 'hsl(var(--brand-900) / <alpha-value>)',
         },
 
-        // ── Gold: semantic alias for brand, same values ─────────────
+        // ── Gold: legacy alias for brand (kept for compatibility) ───
         gold: {
           DEFAULT: 'hsl(var(--brand)       / <alpha-value>)',
           light:   'hsl(var(--brand-300)   / <alpha-value>)',

@@ -4,7 +4,7 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { sanitizePage, sanitizeLimit } from '../common/utils/query.util';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';

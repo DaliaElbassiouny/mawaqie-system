@@ -10,12 +10,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { PERMISSIONS } from '@cdc/shared';
+import { PERMISSIONS } from '@mawaqie/shared';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequirePermissions } from '../auth/decorators/roles.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { ProcurementService } from './procurement.service';
 import {
   ApproveRejectPRDto,

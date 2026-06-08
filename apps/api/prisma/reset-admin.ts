@@ -2,14 +2,14 @@
  * Local-dev only — quickly resets the admin user to known credentials
  * without running the full seed (no demo data touched).
  *
- * Usage:  pnpm --filter @cdc/api db:reset-admin
+ * Usage:  pnpm --filter @mawaqie/api db:reset-admin
  *    or:  pnpm db:reset-admin          (from monorepo root)
  */
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
-const DEV_EMAIL = 'admin@cdc-system.local';
-const DEV_PASSWORD = 'Admin@123456';
+const DEV_EMAIL = 'admin@mawaqie.local';
+const DEV_PASSWORD = 'Mawaqie@2026!';
 
 async function main() {
   if (process.env.NODE_ENV === 'production') {

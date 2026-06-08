@@ -31,7 +31,7 @@ if (!SEED_PASSWORD) {
     '   Never run this seed in production without setting SEED_DEMO_PASSWORD.',
   );
 }
-const seedPassword = SEED_PASSWORD ?? 'CDC@LocalDev2026!';
+const seedPassword = SEED_PASSWORD ?? 'Mawaqie@2026!';
 
 const permissionDefs = [
   { code: 'users:view', nameAr: 'عرض المستخدمين', nameEn: 'View Users', module: 'users', action: 'view' },
@@ -232,7 +232,7 @@ const roleDefinitions = [
 const defaultSettings = [
   {
     key: 'system.nameAr',
-    value: 'نظام التعمير والتنمية للمقاولات',
+    value: 'شركة مواقع النجوم للمقاولات',
     type: 'string',
     module: 'system',
     labelAr: 'اسم النظام (عربي)',
@@ -240,7 +240,7 @@ const defaultSettings = [
   },
   {
     key: 'system.nameEn',
-    value: 'CDC System',
+    value: 'MAWAQEI ELNUJUM Contracting',
     type: 'string',
     module: 'system',
     labelAr: 'اسم النظام (إنجليزي)',
@@ -457,7 +457,7 @@ async function main() {
   const hashedPassword = await bcrypt.hash(seedPassword, 12);
 
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@cdc-system.local' },
+    where: { email: 'admin@mawaqie.local' },
     update: {
       password: hashedPassword,
       nameAr: 'مدير النظام',
@@ -465,7 +465,7 @@ async function main() {
       isActive: true,
     },
     create: {
-      email: 'admin@cdc-system.local',
+      email: 'admin@mawaqie.local',
       password: hashedPassword,
       nameAr: 'مدير النظام',
       nameEn: 'System Admin',
@@ -482,19 +482,19 @@ async function main() {
   // These 8 accounts cover every role for testing. Password = SEED_DEMO_PASSWORD.
   const roleTestUsers = {
     admin: await prisma.user.upsert({
-      where: { email: 'manager@cdc-system.local' },
+      where: { email: 'manager@mawaqie.local' },
       update: { password: hashedPassword, nameAr: 'مدير النظام', nameEn: 'System Manager', isActive: true },
-      create: { email: 'manager@cdc-system.local', password: hashedPassword, nameAr: 'مدير النظام', nameEn: 'System Manager', isActive: true },
+      create: { email: 'manager@mawaqie.local', password: hashedPassword, nameAr: 'مدير النظام', nameEn: 'System Manager', isActive: true },
     }),
     opsManager: await prisma.user.upsert({
-      where: { email: 'ops.manager@cdc-system.local' },
+      where: { email: 'ops.manager@mawaqie.local' },
       update: { password: hashedPassword, nameAr: 'مدير العمليات', nameEn: 'Operations Manager', isActive: true },
-      create: { email: 'ops.manager@cdc-system.local', password: hashedPassword, nameAr: 'مدير العمليات', nameEn: 'Operations Manager', isActive: true },
+      create: { email: 'ops.manager@mawaqie.local', password: hashedPassword, nameAr: 'مدير العمليات', nameEn: 'Operations Manager', isActive: true },
     }),
     execViewer: await prisma.user.upsert({
-      where: { email: 'viewer@cdc-system.local' },
+      where: { email: 'viewer@mawaqie.local' },
       update: { password: hashedPassword, nameAr: 'المشاهد التنفيذي', nameEn: 'Executive Viewer', isActive: true },
-      create: { email: 'viewer@cdc-system.local', password: hashedPassword, nameAr: 'المشاهد التنفيذي', nameEn: 'Executive Viewer', isActive: true },
+      create: { email: 'viewer@mawaqie.local', password: hashedPassword, nameAr: 'المشاهد التنفيذي', nameEn: 'Executive Viewer', isActive: true },
     }),
   };
 
@@ -512,7 +512,7 @@ async function main() {
   // ── Demo data users: kept for demo project/activity assignments ────────────
   const demoUsers = {
     rashed: await prisma.user.upsert({
-      where: { email: 'rashed.pm@cdc-system.local' },
+      where: { email: 'rashed.pm@mawaqie.local' },
       update: {
         password: hashedPassword,
         nameAr: 'راشد العتيبي',
@@ -521,7 +521,7 @@ async function main() {
         isActive: true,
       },
       create: {
-        email: 'rashed.pm@cdc-system.local',
+        email: 'rashed.pm@mawaqie.local',
         password: hashedPassword,
         nameAr: 'راشد العتيبي',
         nameEn: 'Rashed Alotaibi',
@@ -530,7 +530,7 @@ async function main() {
       },
     }),
     sara: await prisma.user.upsert({
-      where: { email: 'sara.pm@cdc-system.local' },
+      where: { email: 'sara.pm@mawaqie.local' },
       update: {
         password: hashedPassword,
         nameAr: 'سارة القحطاني',
@@ -539,7 +539,7 @@ async function main() {
         isActive: true,
       },
       create: {
-        email: 'sara.pm@cdc-system.local',
+        email: 'sara.pm@mawaqie.local',
         password: hashedPassword,
         nameAr: 'سارة القحطاني',
         nameEn: 'Sara Alqahtani',
@@ -548,7 +548,7 @@ async function main() {
       },
     }),
     noura: await prisma.user.upsert({
-      where: { email: 'noura.proc@cdc-system.local' },
+      where: { email: 'noura.proc@mawaqie.local' },
       update: {
         password: hashedPassword,
         nameAr: 'نورة الزهراني',
@@ -557,7 +557,7 @@ async function main() {
         isActive: true,
       },
       create: {
-        email: 'noura.proc@cdc-system.local',
+        email: 'noura.proc@mawaqie.local',
         password: hashedPassword,
         nameAr: 'نورة الزهراني',
         nameEn: 'Noura Alzahrani',
@@ -566,7 +566,7 @@ async function main() {
       },
     }),
     yousef: await prisma.user.upsert({
-      where: { email: 'yousef.cost@cdc-system.local' },
+      where: { email: 'yousef.cost@mawaqie.local' },
       update: {
         password: hashedPassword,
         nameAr: 'يوسف الحربي',
@@ -575,7 +575,7 @@ async function main() {
         isActive: true,
       },
       create: {
-        email: 'yousef.cost@cdc-system.local',
+        email: 'yousef.cost@mawaqie.local',
         password: hashedPassword,
         nameAr: 'يوسف الحربي',
         nameEn: 'Yousef Alharbi',
@@ -584,7 +584,7 @@ async function main() {
       },
     }),
     ali: await prisma.user.upsert({
-      where: { email: 'ali.site@cdc-system.local' },
+      where: { email: 'ali.site@mawaqie.local' },
       update: {
         password: hashedPassword,
         nameAr: 'علي الغامدي',
@@ -593,7 +593,7 @@ async function main() {
         isActive: true,
       },
       create: {
-        email: 'ali.site@cdc-system.local',
+        email: 'ali.site@mawaqie.local',
         password: hashedPassword,
         nameAr: 'علي الغامدي',
         nameEn: 'Ali Alghamdi',
@@ -602,7 +602,7 @@ async function main() {
       },
     }),
     mariam: await prisma.user.upsert({
-      where: { email: 'mariam.site@cdc-system.local' },
+      where: { email: 'mariam.site@mawaqie.local' },
       update: {
         password: hashedPassword,
         nameAr: 'مريم الشمري',
@@ -611,7 +611,7 @@ async function main() {
         isActive: true,
       },
       create: {
-        email: 'mariam.site@cdc-system.local',
+        email: 'mariam.site@mawaqie.local',
         password: hashedPassword,
         nameAr: 'مريم الشمري',
         nameEn: 'Mariam Alshammari',
@@ -2521,13 +2521,13 @@ async function main() {
 
   // ── Demo Notifications ────────────────────────────────────────────────────
   const adminUsers = await prisma.user.findMany({
-    where: { email: { in: ['admin@cdc-system.local', 'rashed.pm@cdc-system.local', 'noura.proc@cdc-system.local'] } },
+    where: { email: { in: ['admin@mawaqie.local', 'rashed.pm@mawaqie.local', 'noura.proc@mawaqie.local'] } },
     select: { id: true, email: true },
   });
 
-  const adminUserObj = adminUsers.find((u) => u.email === 'admin@cdc-system.local');
-  const rashedUser = adminUsers.find((u) => u.email === 'rashed.pm@cdc-system.local');
-  const nouraUser = adminUsers.find((u) => u.email === 'noura.proc@cdc-system.local');
+  const adminUserObj = adminUsers.find((u) => u.email === 'admin@mawaqie.local');
+  const rashedUser = adminUsers.find((u) => u.email === 'rashed.pm@mawaqie.local');
+  const nouraUser = adminUsers.find((u) => u.email === 'noura.proc@mawaqie.local');
 
   await prisma.notification.deleteMany({
     where: { userId: { in: adminUsers.map((u) => u.id) } },
@@ -3043,7 +3043,7 @@ async function main() {
   }
 
   console.log('Seeded demo clients, tenders, projects, teams, operations, procurement, cost, and daily reports');
-  console.log(`Admin login: admin@cdc-system.local / ${DEFAULT_PASSWORD}`);
+  console.log(`Admin login: admin@mawaqie.local / ${seedPassword}`);
 }
 
 main()

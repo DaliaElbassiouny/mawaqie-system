@@ -5,7 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma, PRApprovalStage, PRStatus } from '@prisma/client';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { AuditService } from '../audit/audit.service';
 import { PermissionScopeService } from '../common/services/permission-scope.service';
 import { PrismaService } from '../prisma/prisma.service';

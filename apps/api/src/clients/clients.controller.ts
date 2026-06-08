@@ -10,7 +10,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
-import { AuthUser, PERMISSIONS } from '@cdc/shared';
+import { AuthUser, PERMISSIONS } from '@mawaqie/shared';
 import { ClientsService } from './clients.service';
 import { CreateClientDto, UpdateClientDto } from './dto/client.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

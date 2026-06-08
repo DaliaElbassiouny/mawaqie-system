@@ -7,7 +7,7 @@ import {
   LookaheadStatus as PrismaLookaheadStatus,
   RequirementReadinessStatus,
 } from '@prisma/client';
-import { MAX_LIMIT } from '@cdc/shared';
+import { MAX_LIMIT } from '@mawaqie/shared';
 import {
   ArrayUnique,
   IsArray,

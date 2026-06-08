@@ -18,7 +18,7 @@
     "noUnusedParameters": false,
     "baseUrl": ".",
     "paths": {
-      "@cdc/shared": ["packages/shared/dist/index"]
+      "@mawaqie/shared": ["packages/shared/dist/index"]
     }
   }
 }

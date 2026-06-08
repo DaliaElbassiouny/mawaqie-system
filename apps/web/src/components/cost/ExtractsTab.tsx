@@ -192,7 +192,11 @@ export function ExtractsTab({ projectId, canEdit }: ExtractsTabProps) {
             </thead>
             <tbody>
               {extracts.map((ext) => (
-                <tr key={ext.id}>
+                <tr
+                  key={ext.id}
+                  onClick={canEdit ? () => openEdit(ext) : undefined}
+                  className={canEdit ? 'cursor-pointer' : undefined}
+                >
                   <td className="font-mono text-xs text-brand">{ext.extractNumber}</td>
                   <td className="text-text-secondary" dir="ltr">{formatDate(ext.date)}</td>
                   <td className="max-w-xs truncate text-text-secondary">
@@ -207,10 +211,10 @@ export function ExtractsTab({ projectId, canEdit }: ExtractsTabProps) {
                   {canEdit && (
                     <td>
                       <div className="flex items-center gap-1 justify-end">
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(ext)}>
+                        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(ext); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget(ext)}>
+                        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); setDeleteTarget(ext); }}>
                           <Trash2 className="h-3.5 w-3.5 text-red-400" />
                         </Button>
                       </div>

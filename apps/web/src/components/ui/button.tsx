@@ -13,7 +13,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /* Primary = gold — the CDC identity action */
+        /* Primary = azure blue — the Mawaqie identity action */
         default:
           'bg-brand text-text-inverted hover:bg-brand-400 active:bg-brand-600 shadow-sm',
         /* Secondary outline */
@@ -25,7 +25,7 @@ const buttonVariants = cva(
         /* Destructive */
         destructive:
           'bg-red-600 text-white hover:bg-red-700 active:bg-red-800 shadow-sm',
-        /* Gold — explicit warm button (alias, same as default in new system) */
+        /* Brand alias (kept for compatibility — same as default) */
         gold:
           'bg-brand text-text-inverted hover:bg-brand-400 active:bg-brand-600 shadow-sm',
         /* Subtle — tinted ghost */

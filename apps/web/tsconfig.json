@@ -23,7 +23,7 @@
       "@/*": [
         "./src/*"
       ],
-      "@cdc/shared": [
+      "@mawaqie/shared": [
         "../../packages/shared/src"
       ]
     },

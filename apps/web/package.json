@@ -1,5 +1,5 @@
 {
-  "name": "@cdc/web",
+  "name": "@mawaqie/web",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@cdc/shared": "workspace:*",
+    "@mawaqie/shared": "workspace:*",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",

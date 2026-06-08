@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { TenderStatus } from '@prisma/client';
-import { AuthUser, PERMISSIONS } from '@cdc/shared';
+import { AuthUser, PERMISSIONS } from '@mawaqie/shared';
 import { TendersService } from './tenders.service';
 import { CreateTenderDto, UpdateTenderDto } from './dto/tender.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';

@@ -1,0 +1,78 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# Render Blueprint — MAWAQEI ELNUJUM / شركة مواقع النجوم للمقاولات
+# Creates: PostgreSQL database + NestJS API + Next.js web app
+#
+# How to use:
+#   1. Push this repo to GitHub.
+#   2. Render Dashboard → New → Blueprint → connect this repo.
+#   3. Render reads this file and provisions all three resources.
+#   4. After the first deploy, seed the database (see DEPLOY.md).
+#
+# Note: service URLs follow the pattern https://<name>.onrender.com
+# ─────────────────────────────────────────────────────────────────────────────
+
+databases:
+  - name: mawaqie-db
+    databaseName: mawaqie
+    user: mawaqie
+    plan: free
+    region: frankfurt
+
+services:
+  # ── Backend API (NestJS) ───────────────────────────────────────────────────
+  - type: web
+    name: mawaqie-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @mawaqie/shared build &&
+      pnpm --filter @mawaqie/api exec prisma generate &&
+      pnpm --filter @mawaqie/api build
+    startCommand: >-
+      pnpm --filter @mawaqie/api exec prisma migrate deploy &&
+      node apps/api/dist/main
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mawaqie-db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
+      # CORS — must match the web service public URL
+      - key: FRONTEND_URL
+        value: https://mawaqie-web.onrender.com
+
+  # ── Frontend (Next.js) ─────────────────────────────────────────────────────
+  - type: web
+    name: mawaqie-web
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: main
+    buildCommand: >-
+      corepack enable &&
+      pnpm install --frozen-lockfile &&
+      pnpm --filter @mawaqie/shared build &&
+      pnpm --filter @mawaqie/web build
+    startCommand: pnpm --filter @mawaqie/web start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Baked into the Next.js build — must point at the API public URL
+      - key: NEXT_PUBLIC_API_URL
+        value: https://mawaqie-api.onrender.com/api/v1
+      - key: NEXT_PUBLIC_DEFAULT_LOCALE
+        value: ar

@@ -6,7 +6,7 @@ import {
   ProjectStatus,
   RequirementReadinessStatus,
 } from '@prisma/client';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { PermissionScopeService } from '../common/services/permission-scope.service';
 import { PrismaService } from '../prisma/prisma.service';
 import {

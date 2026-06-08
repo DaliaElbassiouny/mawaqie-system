@@ -3,8 +3,10 @@
 @tailwind utilities;
 
 /* ═══════════════════════════════════════════════════════════════════
-   CDC Design System — CSS Variables
+   MAWAQEI ELNUJUM Design System — CSS Variables
+   شركة مواقع النجوم للمقاولات
    Light mode = :root   |   Dark mode = .dark
+   Brand = AZURE BLUE (matches the corporate infinity-wave logo).
    All color values are "H S% L%" (no hsl() wrapper) so Tailwind can
    inject the / <alpha-value> modifier for opacity utilities.
 ═══════════════════════════════════════════════════════════════════ */
@@ -34,28 +36,28 @@
     --text-muted:     214  9% 62%;   /* #92a0ae */
     --text-inverted:  0 0% 100%;     /* white — for use on dark/gold bg */
 
-    /* ── CDC Brand Accent = GOLD ─────────────────────────────── */
-    /* Darker in light mode to ensure contrast on white surfaces  */
-    --brand:     38 88% 34%;   /* #a27210 */
-    --brand-50:  42 90% 97%;   /* #fdf8ec */
-    --brand-100: 42 85% 91%;   /* #f8edca */
-    --brand-200: 42 80% 80%;   /* #f0d28a */
-    --brand-300: 42 76% 64%;   /* #ddb348 */
-    --brand-400: 40 82% 50%;   /* #c88e12 */
-    --brand-500: 38 88% 34%;   /* #a27210 — DEFAULT */
-    --brand-600: 36 86% 26%;   /* #7e5408 */
-    --brand-700: 34 82% 20%;   /* #623f06 */
-    --brand-800: 32 78% 14%;   /* #462b04 */
-    --brand-900: 30 72%  9%;   /* #2c1902 */
+    /* ── Mawaqie Brand Accent = AZURE BLUE ───────────────────── */
+    /* Deeper in light mode to ensure contrast on white surfaces  */
+    --brand:     202 88% 33%;  /* #0a6ba1 */
+    --brand-50:  199 80% 96%;  /* #ecf8fd */
+    --brand-100: 200 84% 90%;  /* #d2effb */
+    --brand-200: 199 83% 80%;  /* #a8e0f6 */
+    --brand-300: 199 80% 67%;  /* #66c8ee */
+    --brand-400: 199 78% 52%;  /* #28aae0 */
+    --brand-500: 201 86% 40%;  /* #0e84c0 — DEFAULT accent */
+    --brand-600: 202 88% 33%;  /* #0a6ba1 */
+    --brand-700: 203 86% 27%;  /* #0a587f */
+    --brand-800: 203 80% 22%;  /* #0b4665 */
+    --brand-900: 204 72% 18%;  /* #0e3a52 */
 
-    /* ── Shell — ALWAYS DARK (sidebar stays dark in both modes) ─ */
-    --shell-bg:        220 13% 13%;  /* #1d2230 */
-    --shell-hover:     220 12% 18%;  /* #272e3d */
-    --shell-border:    220 11% 21%;  /* #2e3647 */
-    --shell-text:      213 14% 72%;  /* #a8b5c6 */
-    --shell-muted:     213 10% 48%;  /* #69788a */
-    --shell-active-bg: 38  55% 15%;  /* #302512 — warm gold tint */
-    --shell-active-fg: 42  76% 62%;  /* #ddb845 — bright gold */
+    /* ── Shell — ALWAYS DARK NAVY (sidebar stays dark in both modes) ─ */
+    --shell-bg:        205 60% 12%;  /* #0c283b — deep logo navy */
+    --shell-hover:     205 45% 18%;  /* #19384b */
+    --shell-border:    205 38% 23%;  /* #25455a */
+    --shell-text:      203 22% 74%;  /* #aebfcc */
+    --shell-muted:     203 16% 52%;  /* #6f8597 */
+    --shell-active-bg: 200 60% 18%;  /* #123a4b — cyan tint */
+    --shell-active-fg: 196 82% 62%;  /* #45c6ea — bright cyan */
 
     /* ── Topbar — white in light mode ──────────────────────────── */
     --topbar-bg:     0 0% 100%;      /* white */
@@ -80,27 +82,27 @@
     --text-muted:     210 10% 42%;   /* #5e6a78 */
     --text-inverted:  222 18%  9%;   /* dark — for use on gold bg */
 
-    /* ── CDC Brand = GOLD (brighter in dark mode) ─────────────── */
-    --brand:     42 80% 48%;   /* #c49a14 */
-    --brand-50:  38 65% 10%;   /* #2c1e07 */
-    --brand-100: 39 68% 15%;   /* #42300b */
-    --brand-200: 40 72% 24%;   /* #6a4d10 */
-    --brand-300: 41 76% 38%;   /* #a87b16 */
-    --brand-400: 42 78% 46%;   /* #c09218 */
-    --brand-500: 42 80% 48%;   /* #c49a14 — DEFAULT */
-    --brand-600: 40 76% 40%;   /* #a27e14 */
-    --brand-700: 38 72% 30%;   /* #7a6010 */
-    --brand-800: 36 68% 20%;   /* #51400a */
-    --brand-900: 34 62% 12%;   /* #302706 */
+    /* ── Mawaqie Brand = AZURE BLUE (brighter in dark mode) ───── */
+    --brand:     199 80% 55%;  /* #36b1e4 */
+    --brand-50:  204 60% 11%;  /* #0b2735 */
+    --brand-100: 204 55% 16%;  /* #123a4f */
+    --brand-200: 203 52% 24%;  /* #1d536f */
+    --brand-300: 201 58% 38%;  /* #2879a6 */
+    --brand-400: 199 72% 48%;  /* #25a0d4 */
+    --brand-500: 199 80% 55%;  /* #36b1e4 — DEFAULT */
+    --brand-600: 199 74% 46%;  /* #2092c2 */
+    --brand-700: 201 66% 35%;  /* #1e708f */
+    --brand-800: 203 58% 24%;  /* #1d536f */
+    --brand-900: 204 52% 16%;  /* #133b50 */
 
-    /* ── Shell — deepest charcoal in dark mode ──────────────────── */
-    --shell-bg:        222 12%  8%;  /* #111318 */
-    --shell-hover:     222 11% 13%;  /* #1c1f26 */
-    --shell-border:    222 10% 17%;  /* #252931 */
-    --shell-text:      213 13% 68%;  /* #9ea8ba */
-    --shell-muted:     213  9% 45%;  /* #636e7d */
-    --shell-active-bg: 40  50% 11%;  /* #281f0c */
-    --shell-active-fg: 43  78% 62%;  /* #e0b840 */
+    /* ── Shell — deepest navy in dark mode ──────────────────────── */
+    --shell-bg:        206 55%  8%;  /* #091c29 */
+    --shell-hover:     205 40% 14%;  /* #152e3d */
+    --shell-border:    205 34% 19%;  /* #213b4c */
+    --shell-text:      203 20% 70%;  /* #a3b5c3 */
+    --shell-muted:     203 14% 48%;  /* #697f90 */
+    --shell-active-bg: 200 55% 15%;  /* #11313f */
+    --shell-active-fg: 196 84% 64%;  /* #50cbed */
 
     /* ── Topbar — dark in dark mode ─────────────────────────────── */
     --topbar-bg:     222  8% 13%;    /* matches surface-card */

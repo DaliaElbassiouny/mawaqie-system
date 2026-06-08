@@ -31,16 +31,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared package
-        run: pnpm --filter @cdc/shared build
+        run: pnpm --filter @mawaqie/shared build
 
       - name: Lint
         run: pnpm lint
 
       - name: Type check (API)
-        run: pnpm --filter @cdc/api exec tsc --noEmit
+        run: pnpm --filter @mawaqie/api exec tsc --noEmit
 
       - name: Type check (Web)
-        run: pnpm --filter @cdc/web exec tsc --noEmit
+        run: pnpm --filter @mawaqie/web exec tsc --noEmit
 
   # ─── Build ──────────────────────────────────────────────────────────────────
   build:
@@ -63,16 +63,16 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build shared
-        run: pnpm --filter @cdc/shared build
+        run: pnpm --filter @mawaqie/shared build
 
       - name: Build API
-        run: pnpm --filter @cdc/api build
+        run: pnpm --filter @mawaqie/api build
 
       - name: Build Web
         env:
           NEXT_PUBLIC_API_URL: http://localhost:3001/api/v1
           NEXT_TELEMETRY_DISABLED: 1
-        run: pnpm --filter @cdc/web build
+        run: pnpm --filter @mawaqie/web build
 
   # ─── Database Migration Check ─────────────────────────────────────────────
   db-check:
@@ -94,4 +94,4 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Validate Prisma schema
-        run: pnpm --filter @cdc/api exec prisma validate
+        run: pnpm --filter @mawaqie/api exec prisma validate

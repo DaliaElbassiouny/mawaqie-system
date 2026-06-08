@@ -1,7 +1,7 @@
-# CDC System — نظام التحكم بالتكاليف
-## Cost & Document Control System
+# شركة مواقع النجوم للمقاولات — MAWAQEI ELNUJUM Contracting
+## Project, Cost & Procurement Management System
 
-A professional monorepo system for managing clients, tenders, projects, cost control, and procurement workflows — built with Arabic-first UI and corporate dark navy styling.
+A professional monorepo system for managing clients, tenders, projects, cost control, and procurement workflows — built with Arabic-first UI and an azure-blue corporate identity matching the MAWAQEI ELNUJUM brand.
 
 ---
 
@@ -68,7 +68,7 @@ This installs packages for the backend, frontend, and shared library at once.
 ### Step 4 — Build the shared library
 
 ```bash
-pnpm --filter @cdc/shared build
+pnpm --filter @mawaqie/shared build
 ```
 
 ### Step 5 — Run database migrations
@@ -87,7 +87,7 @@ pnpm db:seed
 ```
 
 This creates:
-- **Admin user:** `admin@cdc-system.local` / password: `Admin@123456`
+- **Admin user:** `admin@mawaqie.local` / password: `Mawaqie@2026!`
 - Demo client, tender, and project
 - All system roles and permissions
 
@@ -108,17 +108,17 @@ Swagger docs at: http://localhost:3001/api/docs
 cd apps/web
 pnpm dev
 ```
-App will run at: http://localhost:3000
+App will run at: http://localhost:3003
 
 ### Step 8 — Open the app
 
-Go to: **http://localhost:3000**
+Go to: **http://localhost:3003**
 
 You will be automatically redirected to the Arabic login page.
 
 Login with:
-- Email: `admin@cdc-system.local`
-- Password: `Admin@123456`
+- Email: `admin@mawaqie.local`
+- Password: `Mawaqie@2026!`
 
 ---
 
@@ -139,12 +139,12 @@ This starts PostgreSQL, Redis, the API, and the web app together.
 ## Project Structure
 
 ```
-cdc-system/
+mawaqie-system/
 ├── apps/
 │   ├── api/           ← NestJS backend (port 3001)
 │   │   ├── prisma/    ← Database schema and seed
 │   │   └── src/       ← All backend source code
-│   └── web/           ← Next.js frontend (port 3000)
+│   └── web/           ← Next.js frontend (port 3003)
 │       └── src/       ← All frontend source code
 ├── packages/
 │   └── shared/        ← Shared TypeScript types used by both apps
@@ -158,8 +158,8 @@ cdc-system/
 
 | Field | Value |
 |---|---|
-| Email | `admin@cdc-system.local` |
-| Password | `Admin@123456` |
+| Email | `admin@mawaqie.local` |
+| Password | `Mawaqie@2026!` |
 | Role | Super Admin (full access) |
 
 > **Important:** Change these credentials before going live.
@@ -172,10 +172,12 @@ cdc-system/
 |---|---|---|
 | SUPER_ADMIN | مدير النظام | Everything |
 | ADMIN | مشرف | All except system-level settings |
+| OPERATIONS_MANAGER | مدير عمليات | Operations, schedules, activities |
 | PROJECT_MANAGER | مدير مشروع | Projects, cost, procurement |
-| COST_CONTROLLER | مراقب تكاليف | Cost control only |
+| SITE_ENGINEER | مهندس موقع | Field execution, daily logs |
 | PROCUREMENT_OFFICER | مسؤول مشتريات | Procurement only |
-| VIEWER | مشاهد | Read-only access |
+| COST_CONTROLLER | مراقب تكاليف | Cost control only |
+| EXECUTIVE_VIEWER | مشاهد تنفيذي | Read-only access |
 
 ---
 
@@ -183,7 +185,7 @@ cdc-system/
 
 ```bash
 # Run database migrations after schema changes
-pnpm --filter @cdc/api prisma:migrate
+pnpm --filter @mawaqie/api prisma:migrate
 
 # Open the database visual editor
 pnpm db:studio

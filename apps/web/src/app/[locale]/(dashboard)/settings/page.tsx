@@ -26,11 +26,11 @@ export default function SettingsPage() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-sm text-text-secondary">{t('systemName')} (عربي)</label>
-              <Input defaultValue="نظام التحكم بالتكاليف" />
+              <Input defaultValue="شركة مواقع النجوم للمقاولات" />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm text-text-secondary">{t('systemName')} (English)</label>
-              <Input defaultValue="CDC System" dir="ltr" />
+              <Input defaultValue="MAWAQEI ELNUJUM Contracting" dir="ltr" />
             </div>
             <div className="space-y-1.5">
               <label className="text-sm text-text-secondary">{t('logo')}</label>

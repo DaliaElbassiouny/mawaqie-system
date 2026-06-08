@@ -6,7 +6,7 @@ import { QueryProvider } from '@/components/providers/QueryProvider';
 import { locales, localeDir, type Locale } from '@/i18n/config';
 
 export const metadata: Metadata = {
-  title: 'CDC System',
+  title: 'MAWAQEI ELNUJUM — شركة مواقع النجوم للمقاولات',
 };
 
 interface LocaleLayoutProps {

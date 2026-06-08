@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter, usePathname } from 'next/navigation';
-import { LogOut, ChevronDown, Globe, User, Sun, Moon, HelpCircle } from 'lucide-react';
+import { LogOut, ChevronDown, Globe, User, Sun, Moon, HelpCircle, Menu } from 'lucide-react';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { useAuthStore } from '@/store/auth.store';
 import { useThemeStore } from '@/store/theme.store';
@@ -24,7 +24,7 @@ const ROLE_LABELS: Record<string, { ar: string; en: string }> = {
   VIEWER:              { ar: 'مشاهد',              en: 'Viewer' },
 };
 
-export function Topbar() {
+export function Topbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const t        = useTranslations('auth');
   const locale   = useLocale();
   const router   = useRouter();
@@ -54,17 +54,24 @@ export function Topbar() {
 
   return (
     <header
-      className="h-[60px] flex items-center justify-between px-5 flex-shrink-0 gap-4 border-b"
+      className="h-[60px] flex items-center justify-between px-3 sm:px-5 flex-shrink-0 gap-2 sm:gap-4 border-b"
       style={{
         backgroundColor: 'hsl(var(--topbar-bg))',
         borderColor:     'hsl(var(--topbar-border))',
       }}
     >
-      {/* ── Left: tagline ────────────────────────────────────── */}
+      {/* ── Left: menu toggle (mobile) + tagline ─────────────── */}
       <div className="flex items-center gap-3 min-w-0 flex-1">
-        <div className="h-4 w-px bg-surface-border hidden sm:block" />
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden w-9 h-9 -ms-1 rounded-md flex items-center justify-center
+                     text-text-secondary hover:bg-surface-hover hover:text-text-primary transition-colors"
+          aria-label={isRtl ? 'فتح القائمة' : 'Open menu'}
+        >
+          <Menu className="w-5 h-5" />
+        </button>
         <p className="text-xs text-text-muted hidden sm:block font-medium tracking-wide truncate">
-          CDC — Construction and Development Contracting
+          {isRtl ? 'شركة مواقع النجوم للمقاولات' : 'MAWAQEI ELNUJUM Contracting'}
         </p>
       </div>
 

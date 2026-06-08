@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 230" role="img" aria-label="MAWAQEI ELNUJUM — شركة مواقع النجوم للمقاولات">
+  <defs>
+    <linearGradient id="mawaqieLogo" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%"  stop-color="#86DCF0"/>
+      <stop offset="42%" stop-color="#33B2DF"/>
+      <stop offset="100%" stop-color="#0E6FB2"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Infinity mark -->
+  <g transform="translate(70 0)" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M100 55 C100 30 64 30 50 55 C38 80 100 80 100 55 C100 30 136 30 150 55 C162 80 100 80 100 55 Z"
+          stroke="url(#mawaqieLogo)" stroke-width="17"/>
+    <path d="M100 55 C100 30 64 30 50 55 C38 80 100 80 100 55 C100 30 136 30 150 55 C162 80 100 80 100 55 Z"
+          stroke="#CDEEF8" stroke-width="4" opacity="0.75" transform="translate(-1.5 -3)"/>
+  </g>
+
+  <!-- Latin wordmark -->
+  <text x="170" y="150" text-anchor="middle"
+        font-family="Georgia, 'Times New Roman', serif" font-weight="700"
+        font-size="34" letter-spacing="1.5" fill="#1C70AB">MAWAQEI ELNUJUM</text>
+
+  <!-- Tagline -->
+  <text x="170" y="172" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif" font-weight="400"
+        font-size="12.5" letter-spacing="1" fill="#8FA3B2">running . maintenance . cleanliness</text>
+
+  <!-- Arabic name -->
+  <text x="170" y="210" text-anchor="middle" direction="rtl"
+        font-family="'Tajawal', 'Segoe UI', 'Arial', sans-serif" font-weight="700"
+        font-size="26" fill="#1C70AB">شركة مواقع النجوم للمقاولات</text>
+</svg>

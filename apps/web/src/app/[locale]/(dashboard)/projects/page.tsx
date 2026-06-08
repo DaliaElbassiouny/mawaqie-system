@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import {
   Briefcase,
@@ -55,6 +55,7 @@ export default function ProjectsPage() {
   const t = useTranslations('projects');
   const tc = useTranslations('common');
   const locale = useLocale();
+  const router = useRouter();
   const isRtl = locale === 'ar';
   const { hasPermission } = useAuthStore();
 
@@ -270,11 +271,13 @@ export default function ProjectsPage() {
                   {projects.map((project) => {
                     const meta = STATUS_META[project.status];
                     return (
-                      <tr key={project.id} className="hover:bg-surface-hover transition-colors group">
-                        <td className="px-3 py-3 font-mono text-xs text-brand whitespace-nowrap">
-                          <Link href={`/${locale}/projects/${project.id}`} className="hover:underline">
-                            {project.code}
-                          </Link>
+                      <tr
+                        key={project.id}
+                        onClick={() => router.push(`/${locale}/projects/${project.id}`)}
+                        className="hover:bg-surface-hover transition-colors group cursor-pointer"
+                      >
+                        <td className="px-3 py-3 font-mono text-xs text-brand whitespace-nowrap hover:underline">
+                          {project.code}
                         </td>
                         <td className="px-3 py-3 max-w-[240px]">
                           <div className="font-medium text-text-primary truncate">{project.nameAr}</div>
@@ -308,7 +311,7 @@ export default function ProjectsPage() {
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               {canEdit && (
                                 <button
-                                  onClick={() => openEdit(project)}
+                                  onClick={(e) => { e.stopPropagation(); openEdit(project); }}
                                   className="p-1.5 rounded-md text-text-muted hover:text-brand hover:bg-surface-hover transition-colors"
                                   title={tc('edit')}
                                 >
@@ -317,7 +320,7 @@ export default function ProjectsPage() {
                               )}
                               {canDelete && (
                                 <button
-                                  onClick={() => setDeleteConfirm(project.id)}
+                                  onClick={(e) => { e.stopPropagation(); setDeleteConfirm(project.id); }}
                                   className="p-1.5 rounded-md text-text-muted hover:text-red-400 hover:bg-surface-hover transition-colors"
                                   title={tc('delete')}
                                 >

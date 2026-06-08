@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } from '@cdc/shared';
+import { DEFAULT_PAGE, DEFAULT_LIMIT, MAX_LIMIT } from '@mawaqie/shared';
 
 export const parseQueryNumber = (value?: string): number | undefined => {
   if (!value?.trim()) return undefined;

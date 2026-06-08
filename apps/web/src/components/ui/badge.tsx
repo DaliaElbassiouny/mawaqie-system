@@ -6,7 +6,7 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        /* Gold = CDC brand accent */
+        /* Azure blue = Mawaqie brand accent */
         default:  'bg-brand/12 text-brand border border-brand/20',
         /* Status */
         success:  'bg-emerald-500/12 text-emerald-600 border border-emerald-500/20 dark:text-emerald-400',

@@ -209,7 +209,11 @@ export function InvoiceRegisterTab({ projectId, canEdit }: InvoiceRegisterTabPro
             </thead>
             <tbody>
               {invoices.map((inv) => (
-                <tr key={inv.id}>
+                <tr
+                  key={inv.id}
+                  onClick={canEdit ? () => openEdit(inv) : undefined}
+                  className={canEdit ? 'cursor-pointer' : undefined}
+                >
                   <td className="font-mono text-xs text-brand">{inv.invoiceNumber}</td>
                   <td className="text-text-secondary" dir="ltr">{formatDate(inv.date)}</td>
                   <td className="font-medium">{inv.vendor}</td>
@@ -226,10 +230,10 @@ export function InvoiceRegisterTab({ projectId, canEdit }: InvoiceRegisterTabPro
                   {canEdit && (
                     <td>
                       <div className="flex items-center gap-1 justify-end">
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(inv)}>
+                        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(inv); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget(inv)}>
+                        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); setDeleteTarget(inv); }}>
                           <Trash2 className="h-3.5 w-3.5 text-red-400" />
                         </Button>
                       </div>

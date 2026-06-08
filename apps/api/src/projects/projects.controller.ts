@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { ProjectStatus } from '@prisma/client';
-import { AuthUser, PERMISSIONS } from '@cdc/shared';
+import { AuthUser, PERMISSIONS } from '@mawaqie/shared';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from '../auth/guards/permissions.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';

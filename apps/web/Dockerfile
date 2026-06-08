@@ -15,8 +15,10 @@ COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm --filter @cdc/shared build
-RUN pnpm --filter @cdc/web build
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN pnpm --filter @mawaqie/shared build
+RUN pnpm --filter @mawaqie/web build
 
 FROM base AS runner
 WORKDIR /app/apps/web

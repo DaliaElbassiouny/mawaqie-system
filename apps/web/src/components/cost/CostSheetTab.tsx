@@ -176,7 +176,11 @@ export function CostSheetTab({ projectId, canEdit }: CostSheetTabProps) {
             </thead>
             <tbody>
               {items.map((item) => (
-                <tr key={item.id}>
+                <tr
+                  key={item.id}
+                  onClick={canEdit ? () => openEdit(item) : undefined}
+                  className={canEdit ? 'cursor-pointer' : undefined}
+                >
                   <td className="font-mono text-xs text-brand">{item.code}</td>
                   <td className="font-medium">{item.nameAr}</td>
                   <td className="text-text-secondary">{CATEGORY_LABELS[item.category] ?? item.category}</td>
@@ -189,10 +193,10 @@ export function CostSheetTab({ projectId, canEdit }: CostSheetTabProps) {
                   {canEdit && (
                     <td>
                       <div className="flex items-center gap-1 justify-end">
-                        <Button variant="ghost" size="icon-sm" onClick={() => openEdit(item)}>
+                        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); openEdit(item); }}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon-sm" onClick={() => setDeleteTarget(item)}>
+                        <Button variant="ghost" size="icon-sm" onClick={(e) => { e.stopPropagation(); setDeleteTarget(item); }}>
                           <Trash2 className="h-3.5 w-3.5 text-red-400" />
                         </Button>
                       </div>

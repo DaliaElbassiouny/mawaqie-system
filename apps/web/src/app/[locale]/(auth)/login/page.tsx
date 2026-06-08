@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
@@ -54,7 +53,7 @@ export default function LoginPage() {
     /* Full-screen split layout */
     <div className="min-h-screen flex bg-canvas">
 
-      {/* ── Left panel — CDC branding ──────────────────────────── */}
+      {/* ── Left panel — brand showcase ────────────────────────── */}
       <div
         className="hidden lg:flex lg:w-[52%] relative flex-col items-center justify-center p-12 overflow-hidden"
         style={{ backgroundColor: 'hsl(var(--shell-bg))' }}
@@ -71,7 +70,7 @@ export default function LoginPage() {
           }}
         />
 
-        {/* Gold glow orbs — subtle */}
+        {/* Brand glow orbs — subtle */}
         <div className="absolute top-1/4 start-1/3 w-72 h-72 rounded-full blur-3xl pointer-events-none"
              style={{ backgroundColor: 'hsl(var(--brand) / 0.06)' }} />
         <div className="absolute bottom-1/4 end-1/4 w-52 h-52 rounded-full blur-3xl pointer-events-none"
@@ -80,20 +79,20 @@ export default function LoginPage() {
         <div className="relative z-10 flex flex-col items-center text-center max-w-xs">
           {/* Logo on white pill */}
           <div className="bg-white rounded-2xl px-7 py-5 shadow-card-lg mb-8">
-            <Image
-              src="/cdc-logo.png"
-              alt="CDC – Construction and Development Contracting"
-              width={140}
-              height={70}
-              className="block"
-              priority
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/mawaqie-logo.jpg"
+              alt="شركة مواقع النجوم للمقاولات — MAWAQEI ELNUJUM Contracting"
+              width={210}
+              height={138}
+              className="block w-[210px] h-auto"
             />
           </div>
 
           {/* Bilingual tagline */}
           <h2 className="text-2xl font-bold leading-tight mb-1"
               style={{ color: 'hsl(var(--shell-active-fg))' }}>
-            {locale === 'ar' ? 'التعمير والتنمية للمقاولات' : 'Construction & Development Contracting'}
+            {locale === 'ar' ? 'شركة مواقع النجوم للمقاولات' : 'MAWAQEI ELNUJUM Contracting'}
           </h2>
           <p className="text-sm leading-relaxed mt-2"
              style={{ color: 'hsl(var(--shell-text))' }}>
@@ -130,7 +129,7 @@ export default function LoginPage() {
           className="absolute bottom-8 text-[11px] tracking-wider text-center"
           style={{ color: 'hsl(var(--shell-muted))' }}
         >
-          © {new Date().getFullYear()} CDC — All rights reserved
+          © {new Date().getFullYear()} {locale === 'ar' ? 'شركة مواقع النجوم للمقاولات' : 'MAWAQEI ELNUJUM Contracting'}
         </div>
       </div>
 
@@ -140,14 +139,15 @@ export default function LoginPage() {
 
           {/* Mobile logo */}
           <div className="flex justify-center mb-8 lg:hidden">
-            <div className="bg-white rounded-xl px-5 py-3 shadow-card">
-              <Image src="/cdc-logo.png" alt="CDC" width={110} height={55} className="block" priority />
+            <div className="bg-white rounded-xl px-5 py-4 shadow-card">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/mawaqie-logo.jpg" alt="شركة مواقع النجوم للمقاولات" width={170} height={112} className="block w-[170px] h-auto" />
             </div>
           </div>
 
           {/* Form card */}
           <div className="bg-surface-card border border-surface-border rounded-2xl shadow-card-lg overflow-hidden">
-            {/* Gold top stripe */}
+            {/* Brand top stripe */}
             <div className="h-1 bg-gradient-to-r from-brand/80 via-brand to-brand/40" />
 
             <div className="p-7">
@@ -176,7 +176,7 @@ export default function LoginPage() {
                       {...register('email')}
                       type="email"
                       className="ps-9"
-                      placeholder="you@cdc-contracting.com"
+                      placeholder="you@mawaqie.com"
                       autoComplete="email"
                       dir="ltr"
                     />
@@ -223,9 +223,9 @@ export default function LoginPage() {
               {process.env.NODE_ENV !== 'production' && (
                 <div className="mt-5 p-3 bg-surface-hover rounded-lg border border-surface-border">
                   <p className="text-[11px] text-text-muted text-center leading-relaxed">
-                    Demo: <span className="font-mono text-text-secondary">admin@cdc-system.local</span>
+                    Demo: <span className="font-mono text-text-secondary">admin@mawaqie.local</span>
                     {' / '}
-                    <span className="font-mono text-text-secondary">Admin@123456</span>
+                    <span className="font-mono text-text-secondary">Mawaqie@2026!</span>
                   </p>
                 </div>
               )}
@@ -233,7 +233,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-center text-[11px] text-text-muted mt-5">
-            © {new Date().getFullYear()} CDC — Construction and Development Contracting
+            © {new Date().getFullYear()} {locale === 'ar' ? 'شركة مواقع النجوم للمقاولات' : 'MAWAQEI ELNUJUM Contracting'}
           </p>
         </div>
       </div>

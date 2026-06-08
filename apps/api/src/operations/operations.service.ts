@@ -9,7 +9,7 @@ import {
   Prisma,
   RequirementReadinessStatus,
 } from '@prisma/client';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 import { AuditService } from '../audit/audit.service';
 import { sanitizeLimit, sanitizePage } from '../common/utils/query.util';
 import { PermissionScopeService } from '../common/services/permission-scope.service';

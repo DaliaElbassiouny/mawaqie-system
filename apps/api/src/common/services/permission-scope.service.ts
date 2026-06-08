@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { AuthUser } from '@cdc/shared';
+import { AuthUser } from '@mawaqie/shared';
 
 // Roles that bypass per-record scoping and see the full dataset.
 // Phase 2: extend this list when organisation-level roles are introduced.

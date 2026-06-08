@@ -3,10 +3,10 @@ import './globals.css';
 import { THEME_INIT_SCRIPT } from '@/store/theme.store';
 
 export const metadata: Metadata = {
-  title: 'CDC — Construction and Development Contracting',
-  description: 'CDC Project & Cost Management System — نظام إدارة المشاريع والتكاليف',
+  title: 'MAWAQEI ELNUJUM Contracting — شركة مواقع النجوم للمقاولات',
+  description: 'نظام إدارة المشاريع والتكاليف والمشتريات — MAWAQEI ELNUJUM Project & Cost Management System',
   icons: {
-    icon: '/cdc-logo.png',
+    icon: '/mawaqie-mark.svg',
   },
 };
 
