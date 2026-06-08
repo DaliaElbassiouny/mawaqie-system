@@ -55,4 +55,4 @@ services:
       # CORS — set this to your Vercel frontend URL after the first Vercel deploy.
       # Supports a comma-separated list of allowed origins.
       - key: FRONTEND_URL
-        value: https://mawaqie-system.vercel.app
+        value: https://mawaqie-system-web.vercel.app
